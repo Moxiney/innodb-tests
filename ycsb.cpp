@@ -167,8 +167,6 @@ insert_rows(
     return (err);
 }
 
-
-
 /*********************************************************************
 SELECT * FROM T; */
 static ib_err_t
@@ -218,7 +216,8 @@ do_query(
     return (err);
 }
 
-ib_err_t ib_col_set_value(ib_tpl_t &tpl, ib_ulint_t col, int val) {
+ib_err_t ib_col_set_value(ib_tpl_t &tpl, ib_ulint_t col, int val)
+{
     char val_str[COL_LEN] = "";
     snprintf(val_str, COL_LEN, "%d", val);
     auto err = ib_col_set_value(tpl, col, val_str, COL_LEN);
@@ -271,233 +270,233 @@ ib_err_t ycsb_init(
     return err;
 }
 
-ib_err_t update_tuple(ib_crsr_t	crsr, int pkey)
+ib_err_t update_tuple(ib_crsr_t crsr, int pkey)
 {
     ib_err_t err;
     ib_crsr_t index_crsr;
-    ib_tpl_t	sec_key_tpl;
-    int		res = ~0;
+    ib_tpl_t sec_key_tpl;
+    int res = ~0;
 
     /* Open the index. */
     err = ib_cursor_open_index_using_name(crsr, "F0", &index_crsr);
-	assert(err == DB_SUCCESS);
+    assert(err == DB_SUCCESS);
 
     /* Set the record lock mode */
-	err = ib_cursor_set_lock_mode(index_crsr, IB_LOCK_X);
-	assert(err == DB_SUCCESS);
+    err = ib_cursor_set_lock_mode(index_crsr, IB_LOCK_X);
+    assert(err == DB_SUCCESS);
 
     /* Since we will be updating the clustered index record, set the
 	need to access clustered index flag in the cursor. */
-	ib_cursor_set_cluster_access(index_crsr);
+    ib_cursor_set_cluster_access(index_crsr);
 
-	/* Create a tuple for searching the secondary index. */
-	sec_key_tpl = ib_sec_search_tuple_create(index_crsr);
-	assert(sec_key_tpl != NULL);
+    /* Create a tuple for searching the secondary index. */
+    sec_key_tpl = ib_sec_search_tuple_create(index_crsr);
+    assert(sec_key_tpl != NULL);
 
     char pkey_str[COL_LEN] = "";
     snprintf(pkey_str, COL_LEN, "%d", pkey);
     err = ib_col_set_value(sec_key_tpl, 0, pkey_str, COL_LEN);
-	assert(err == DB_SUCCESS);
+    assert(err == DB_SUCCESS);
 
-    print_tuple(stdout, sec_key_tpl);
+    // print_tuple(stdout, sec_key_tpl);
 
     /* Search for the key using the cluster index (PK) */
     err = ib_cursor_moveto(index_crsr, sec_key_tpl, IB_CUR_GE, &res);
-	assert(err == DB_SUCCESS
-	       || err == DB_END_OF_INDEX
-	       || err == DB_RECORD_NOT_FOUND);
+    assert(err == DB_SUCCESS || err == DB_END_OF_INDEX || err == DB_RECORD_NOT_FOUND);
 
     ib_tuple_delete(sec_key_tpl);
 
     /* Match found */
-    if (res == 0) {
-        printf("find tuple %d\n", pkey);
-        int		l;
-		char*		ptr;
-		const char*	first;
-		ib_ulint_t	data_len;
-		ib_col_meta_t	col_meta;
-		ib_ulint_t	first_len;
-		ib_tpl_t	old_tpl = NULL;
-		ib_tpl_t	new_tpl = NULL;
+    if (res == 0)
+    {
+        // printf("find tuple %d\n", pkey);
+        int l;
+        char *ptr;
+        const char *first;
+        ib_ulint_t data_len;
+        ib_col_meta_t col_meta;
+        ib_ulint_t first_len;
+        ib_tpl_t old_tpl = NULL;
+        ib_tpl_t new_tpl = NULL;
         RandomGenerator rnd;
 
         old_tpl = ib_clust_read_tuple_create(crsr);
-		assert(old_tpl != NULL);
+        assert(old_tpl != NULL);
 
-		new_tpl = ib_clust_read_tuple_create(crsr);
-		assert(new_tpl != NULL);
+        new_tpl = ib_clust_read_tuple_create(crsr);
+        assert(new_tpl != NULL);
 
         err = ib_cursor_read_row(index_crsr, old_tpl);
-		assert(err == DB_SUCCESS);
+        assert(err == DB_SUCCESS);
 
         err = ib_tuple_copy(new_tpl, old_tpl);
-        print_tuple(stdout, new_tpl);
+        // print_tuple(stdout, new_tpl);
 
         // Set update random column
         auto col = rnd.randomInt() % 9 + 1;
         // char val_str[COL_LEN] = "";
         // snprintf(val_str, COL_LEN, "%d", 0);
         // err = ib_col_set_value(new_tpl, col, val_str, COL_LEN);
-        
+
         err = ib_col_set_value(new_tpl, col, 0);
         assert(err == DB_SUCCESS);
-        print_tuple(stdout, new_tpl);
+        // print_tuple(stdout, new_tpl);
 
         err = ib_cursor_update_row(index_crsr, old_tpl, new_tpl);
-		assert(err == DB_SUCCESS || err == DB_DUPLICATE_KEY);
+        assert(err == DB_SUCCESS || err == DB_DUPLICATE_KEY);
 
         /* Reset the old and new tuple instances. */
         old_tpl = ib_tuple_clear(old_tpl);
-		assert(old_tpl != NULL);
+        assert(old_tpl != NULL);
 
-		new_tpl = ib_tuple_clear(new_tpl);
-		assert(new_tpl != NULL);
+        new_tpl = ib_tuple_clear(new_tpl);
+        assert(new_tpl != NULL);
 
         ib_tuple_delete(old_tpl);
-		ib_tuple_delete(new_tpl);
+        ib_tuple_delete(new_tpl);
     }
 
     /* Close index*/
     err = ib_cursor_close(index_crsr);
-	assert(err == DB_SUCCESS);
-
-    
+    assert(err == DB_SUCCESS);
 
     return DB_SUCCESS;
 }
 
-ib_err_t read_tuple(ib_crsr_t	crsr, int pkey)
+ib_err_t read_tuple(ib_crsr_t crsr, int pkey)
 {
     ib_err_t err;
     ib_crsr_t index_crsr;
-    ib_tpl_t	sec_key_tpl;
-    int		res = ~0;
+    ib_tpl_t sec_key_tpl;
+    int res = ~0;
 
     /* Open the index. */
     err = ib_cursor_open_index_using_name(crsr, "F0", &index_crsr);
-	assert(err == DB_SUCCESS);
+    assert(err == DB_SUCCESS);
 
     /* Set the record lock mode */
-	err = ib_cursor_set_lock_mode(index_crsr, IB_LOCK_X);
-	assert(err == DB_SUCCESS);
+    err = ib_cursor_set_lock_mode(index_crsr, IB_LOCK_X);
+    assert(err == DB_SUCCESS);
 
     /* Since we will be updating the clustered index record, set the
 	need to access clustered index flag in the cursor. */
-	ib_cursor_set_cluster_access(index_crsr);
+    ib_cursor_set_cluster_access(index_crsr);
 
-	/* Create a tuple for searching the secondary index. */
-	sec_key_tpl = ib_sec_search_tuple_create(index_crsr);
-	assert(sec_key_tpl != NULL);
+    /* Create a tuple for searching the secondary index. */
+    sec_key_tpl = ib_sec_search_tuple_create(index_crsr);
+    assert(sec_key_tpl != NULL);
 
     char pkey_str[COL_LEN] = "";
     snprintf(pkey_str, COL_LEN, "%d", pkey);
     err = ib_col_set_value(sec_key_tpl, 0, pkey_str, COL_LEN);
-	assert(err == DB_SUCCESS);
+    assert(err == DB_SUCCESS);
 
-    print_tuple(stdout, sec_key_tpl);
+    // print_tuple(stdout, sec_key_tpl);
 
     /* Search for the key using the cluster index (PK) */
     err = ib_cursor_moveto(index_crsr, sec_key_tpl, IB_CUR_GE, &res);
-	assert(err == DB_SUCCESS
-	       || err == DB_END_OF_INDEX
-	       || err == DB_RECORD_NOT_FOUND);
+    assert(err == DB_SUCCESS || err == DB_END_OF_INDEX || err == DB_RECORD_NOT_FOUND);
 
     ib_tuple_delete(sec_key_tpl);
 
     /* Match found */
-    if (res == 0) {
-        printf("find tuple %d\n", pkey);
-        int		l;
-		char*		ptr;
-		const char*	first;
-		ib_ulint_t	data_len;
-		ib_col_meta_t	col_meta;
-		ib_ulint_t	first_len;
-		ib_tpl_t	old_tpl = NULL;
-		ib_tpl_t	new_tpl = NULL;
+    if (res == 0)
+    {
+        // printf("find tuple %d\n", pkey);
+        int l;
+        char *ptr;
+        const char *first;
+        ib_ulint_t data_len;
+        ib_col_meta_t col_meta;
+        ib_ulint_t first_len;
+        ib_tpl_t old_tpl = NULL;
+        ib_tpl_t new_tpl = NULL;
 
         old_tpl = ib_clust_read_tuple_create(crsr);
-		assert(old_tpl != NULL);
+        assert(old_tpl != NULL);
 
-		new_tpl = ib_clust_read_tuple_create(crsr);
-		assert(new_tpl != NULL);
+        new_tpl = ib_clust_read_tuple_create(crsr);
+        assert(new_tpl != NULL);
 
         err = ib_cursor_read_row(index_crsr, old_tpl);
-		assert(err == DB_SUCCESS);
+        assert(err == DB_SUCCESS);
 
-        print_tuple(stdout, old_tpl);
-
+        // print_tuple(stdout, old_tpl);
 
         /* Reset the old and new tuple instances. */
         old_tpl = ib_tuple_clear(old_tpl);
-		assert(old_tpl != NULL);
+        assert(old_tpl != NULL);
 
-		new_tpl = ib_tuple_clear(new_tpl);
-		assert(new_tpl != NULL);
+        new_tpl = ib_tuple_clear(new_tpl);
+        assert(new_tpl != NULL);
 
         ib_tuple_delete(old_tpl);
-		ib_tuple_delete(new_tpl);
+        ib_tuple_delete(new_tpl);
     }
 
     /* Close index*/
     err = ib_cursor_close(index_crsr);
-	assert(err == DB_SUCCESS);
-
-    
+    assert(err == DB_SUCCESS);
 
     return DB_SUCCESS;
 }
 
 ib_err_t ycsb_run_txn(
     const char *dbname,
-    const char *name)
+    const char *name,
+    int read_ratio)
 {
     ib_err_t err;
     ib_crsr_t crsr;
     ib_trx_t ib_trx;
 
-    int read_ratio = 50;
+    
     RandomGenerator rnd;
 
     // barrier->wait()
-    // int round = 10;
-    // while (round)
-    // {
-    //     round--;
-    //     int query_num = rnd.randomInt() % 10 + 1;
+    int round = 100;
+    while (round)
+    {
+        round--;
+        int query_num = rnd.randomInt() % 10 + 1;
 
-    //     ib_trx = ib_trx_begin(IB_TRX_REPEATABLE_READ);
-    //     assert(ib_trx != NULL);
+        ib_trx = ib_trx_begin(IB_TRX_REPEATABLE_READ);
+        assert(ib_trx != NULL);
 
-    //     err = open_table(dbname, name, ib_trx, &crsr);
-    //     assert(err == DB_SUCCESS);
+        err = open_table(dbname, name, ib_trx, &crsr);
+        assert(err == DB_SUCCESS);
 
-    //     err = ib_cursor_lock(crsr, IB_LOCK_IX);
-    //     assert(err == DB_SUCCESS);
+        err = ib_cursor_lock(crsr, IB_LOCK_IX);
+        assert(err == DB_SUCCESS);
 
-    //     while (query_num)
-    //     {
-    //         query_num--;
-    //         int op = rnd.randomInt() % 100;
+        while (query_num)
+        {
+            printf("round: %d, query: %d\n", round, query_num);
+            query_num--;
+            int op = rnd.randomInt() % 100;
+            int pkey = rnd.randomInt()% init_table_size;
 
-    //         if (op < read_ratio)
-    //         {
-    //             // read random row
-    //         }
-    //         else
-    //         {
-    //             // update random row
-    //         }
-    //     }
+            if (op < read_ratio)
+            {
+                // read random row
+                err = read_tuple(crsr, pkey);
+                assert(err == DB_SUCCESS);
+            }
+            else
+            {
+                // update random row
+                err = update_tuple(crsr, pkey);
+                assert(err == DB_SUCCESS);
+            }
+        }
 
-    //     err = ib_cursor_close(crsr);
-    //     assert(err == DB_SUCCESS);
-    //     crsr = NULL;
+        err = ib_cursor_close(crsr);
+        assert(err == DB_SUCCESS);
+        crsr = NULL;
 
-    //     err = ib_trx_commit(ib_trx);
-    //     assert(err == DB_SUCCESS);
-    // }
+        err = ib_trx_commit(ib_trx);
+        assert(err == DB_SUCCESS);
+    }
 
     printf("Begin transaction\n");
     ib_trx = ib_trx_begin(IB_TRX_REPEATABLE_READ);
@@ -515,14 +514,17 @@ ib_err_t ycsb_run_txn(
     err = do_query(crsr);
     assert(err == DB_SUCCESS);
 
-    int pkey = 5;
-    printf("Read tuple %d\n", pkey);
-    err = update_tuple(crsr, pkey);
-    assert(err == DB_SUCCESS);
+    // for (int i = 0; i < 5; i++)
+    // {
+    //     int pkey = rnd.randomInt() % 10;
+    //     printf("Update tuple %d\n", pkey);
+    //     err = update_tuple(crsr, pkey);
+    //     assert(err == DB_SUCCESS);
 
-    printf("Query table\n");
-    err = do_query(crsr);
-    assert(err == DB_SUCCESS);
+    //     // printf("Query table\n");
+    //     // err = do_query(crsr);
+    //     // assert(err == DB_SUCCESS);
+    // }
 
     printf("Close cursor\n");
     err = ib_cursor_close(crsr);

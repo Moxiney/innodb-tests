@@ -14,6 +14,7 @@
 
 #define DATABASE "test"
 #define TABLE "t"
+#define INDEX "F0"
 
 typedef struct row_t {
 	char		c1[32];
@@ -251,115 +252,115 @@ Print character array of give size or upto 256 chars */
 // 	return(err);
 // }
 
-static
-ib_err_t
-create_database(
-/*============*/
-	const char*	name)
-{
-	ib_bool_t	err;
+// static
+// ib_err_t
+// create_database(
+// /*============*/
+// 	const char*	name)
+// {
+// 	ib_bool_t	err;
 
-	err = ib_database_create(name);
-	assert(err == IB_TRUE);
+// 	err = ib_database_create(name);
+// 	assert(err == IB_TRUE);
 
-	return(DB_SUCCESS);
-}
+// 	return(DB_SUCCESS);
+// }
 
-static
-ib_err_t
-create_table(
-/*=========*/
-	const char*	dbname,			/*!< in: database name */
-	const char*	name)			/*!< in: table name */
-{
-	ib_trx_t	ib_trx;
-	ib_id_t		table_id = 0;
-	ib_err_t	err = DB_SUCCESS;
-	ib_tbl_sch_t	ib_tbl_sch = NULL;
-	ib_idx_sch_t	ib_idx_sch = NULL;
-	char		table_name[IB_MAX_TABLE_NAME_LEN];
-
-
-	snprintf(table_name, sizeof(table_name), "%s/%s", dbname, name);
-	printf("Creating %s\n", table_name);
-
-	/* Pass a table page size of 0, ie., use default page size. */
-	err = ib_table_schema_create(
-		table_name, &ib_tbl_sch, IB_TBL_COMPACT, 0);
-
-	assert(err == DB_SUCCESS);
-
-	err = ib_table_schema_add_col(
-		ib_tbl_sch, "c1",
-		IB_VARCHAR, IB_COL_NONE, 0, COL_LEN(c1)-1);
-
-	assert(err == DB_SUCCESS);
-
-	err = ib_table_schema_add_col(
-		ib_tbl_sch, "c2",
-		IB_VARCHAR, IB_COL_NONE, 0, COL_LEN(c2)-1);
-	assert(err == DB_SUCCESS);
-
-	err = ib_table_schema_add_col(
-		ib_tbl_sch, "c3",
-		IB_INT, IB_COL_UNSIGNED, 0, COL_LEN(c3));
-
-	assert(err == DB_SUCCESS);
-
-	err = ib_table_schema_add_index(ib_tbl_sch, "c1_c2", &ib_idx_sch);
-	assert(err == DB_SUCCESS);
-
-	/* Set prefix length to 0. */
-	err = ib_index_schema_add_col( ib_idx_sch, "c1", 0);
-	assert(err == DB_SUCCESS);
-
-	/* Set prefix length to 0. */
-	err = ib_index_schema_add_col( ib_idx_sch, "c2", 0);
-	assert(err == DB_SUCCESS);
-
-	err = ib_index_schema_set_clustered(ib_idx_sch);
-	assert(err == DB_SUCCESS);
-
-	/* create table */
-	ib_trx = ib_trx_begin(IB_TRX_REPEATABLE_READ);
-	err = ib_schema_lock_exclusive(ib_trx);
-	assert(err == DB_SUCCESS);
-
-	err = ib_table_create(ib_trx, ib_tbl_sch, &table_id);
-	assert(err == DB_SUCCESS);
-
-	err = ib_trx_commit(ib_trx);
-	assert(err == DB_SUCCESS);
-
-	if (ib_tbl_sch != NULL) {
-		ib_table_schema_delete(ib_tbl_sch);
-	}
-
-	return(err);
-}
-
-/*********************************************************************
-Open a table and return a cursor for the table. */
-static
-ib_err_t
-open_table(
-/*=======*/
-	const char*	dbname,		/*!< in: database name */
-	const char*	name,		/*!< in: table name */
-	ib_trx_t	ib_trx,		/*!< in: transaction */
-	ib_crsr_t*	crsr)		/*!< out: innodb cursor */
-{
-	ib_err_t	err = DB_SUCCESS;
-	char		table_name[IB_MAX_TABLE_NAME_LEN];
+// static
+// ib_err_t
+// create_table(
+// /*=========*/
+// 	const char*	dbname,			/*!< in: database name */
+// 	const char*	name)			/*!< in: table name */
+// {
+// 	ib_trx_t	ib_trx;
+// 	ib_id_t		table_id = 0;
+// 	ib_err_t	err = DB_SUCCESS;
+// 	ib_tbl_sch_t	ib_tbl_sch = NULL;
+// 	ib_idx_sch_t	ib_idx_sch = NULL;
+// 	char		table_name[IB_MAX_TABLE_NAME_LEN];
 
 
-	snprintf(table_name, sizeof(table_name), "%s/%s", dbname, name);
+// 	snprintf(table_name, sizeof(table_name), "%s/%s", dbname, name);
+// 	printf("Creating %s\n", table_name);
 
-	err = ib_cursor_open_table(table_name, ib_trx, crsr);
-	assert(err == DB_SUCCESS);
+// 	/* Pass a table page size of 0, ie., use default page size. */
+// 	err = ib_table_schema_create(
+// 		table_name, &ib_tbl_sch, IB_TBL_COMPACT, 0);
 
-	return(err);
-}
+// 	assert(err == DB_SUCCESS);
+
+// 	err = ib_table_schema_add_col(
+// 		ib_tbl_sch, "c1",
+// 		IB_VARCHAR, IB_COL_NONE, 0, COL_LEN(c1)-1);
+
+// 	assert(err == DB_SUCCESS);
+
+// 	err = ib_table_schema_add_col(
+// 		ib_tbl_sch, "c2",
+// 		IB_VARCHAR, IB_COL_NONE, 0, COL_LEN(c2)-1);
+// 	assert(err == DB_SUCCESS);
+
+// 	err = ib_table_schema_add_col(
+// 		ib_tbl_sch, "c3",
+// 		IB_INT, IB_COL_UNSIGNED, 0, COL_LEN(c3));
+
+// 	assert(err == DB_SUCCESS);
+
+// 	err = ib_table_schema_add_index(ib_tbl_sch, "c1_c2", &ib_idx_sch);
+// 	assert(err == DB_SUCCESS);
+
+// 	/* Set prefix length to 0. */
+// 	err = ib_index_schema_add_col( ib_idx_sch, "c1", 0);
+// 	assert(err == DB_SUCCESS);
+
+// 	/* Set prefix length to 0. */
+// 	err = ib_index_schema_add_col( ib_idx_sch, "c2", 0);
+// 	assert(err == DB_SUCCESS);
+
+// 	err = ib_index_schema_set_clustered(ib_idx_sch);
+// 	assert(err == DB_SUCCESS);
+
+// 	/* create table */
+// 	ib_trx = ib_trx_begin(IB_TRX_REPEATABLE_READ);
+// 	err = ib_schema_lock_exclusive(ib_trx);
+// 	assert(err == DB_SUCCESS);
+
+// 	err = ib_table_create(ib_trx, ib_tbl_sch, &table_id);
+// 	assert(err == DB_SUCCESS);
+
+// 	err = ib_trx_commit(ib_trx);
+// 	assert(err == DB_SUCCESS);
+
+// 	if (ib_tbl_sch != NULL) {
+// 		ib_table_schema_delete(ib_tbl_sch);
+// 	}
+
+// 	return(err);
+// }
+
+// /*********************************************************************
+// Open a table and return a cursor for the table. */
+// static
+// ib_err_t
+// open_table(
+// /*=======*/
+// 	const char*	dbname,		/*!< in: database name */
+// 	const char*	name,		/*!< in: table name */
+// 	ib_trx_t	ib_trx,		/*!< in: transaction */
+// 	ib_crsr_t*	crsr)		/*!< out: innodb cursor */
+// {
+// 	ib_err_t	err = DB_SUCCESS;
+// 	char		table_name[IB_MAX_TABLE_NAME_LEN];
+
+
+// 	snprintf(table_name, sizeof(table_name), "%s/%s", dbname, name);
+
+// 	err = ib_cursor_open_table(table_name, ib_trx, crsr);
+// 	assert(err == DB_SUCCESS);
+
+// 	return(err);
+// }
 
 /*********************************************************************
 INSERT INTO T VALUE('c1', 'c2', c3); */
@@ -548,11 +549,12 @@ delete_a_row(
 
 int main()
 {
+	init_table_size = 50;
+	int read_ratio = 50;
 	ib_err_t err;
 	ib_crsr_t crsr;
 	ib_trx_t ib_trx;
 	ib_u64_t version;
-
 
 	version = ib_api_version();
 	printf("API: %d.%d.%d\n",
@@ -574,10 +576,12 @@ int main()
     err = ycsb_init(DATABASE, TABLE);
 	assert(err == DB_SUCCESS);
 
-	err = ycsb_run_txn(DATABASE, TABLE);
+	// single_thread_query
+
+	err = ycsb_run_txn(DATABASE, TABLE, read_ratio);
 	assert(err == DB_SUCCESS);
 	
-	// single_thread_query
+	
 
 	// printf("Create table\n");
 	// err = create_table(DATABASE, TABLE);

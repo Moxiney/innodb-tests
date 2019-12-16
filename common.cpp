@@ -7,134 +7,146 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <errno.h>
-#include <getopt.h>	
+#include <getopt.h>
 
 static const char log_group_home_dir[] = "log";
 static const char data_file_path[] = "ibdata1:32M:autoextend";
 
+ib_err_t
+create_database(
+    /*============*/
+    const char *name)
+{
+    ib_bool_t err;
+
+    err = ib_database_create(name);
+    assert(err == IB_TRUE);
+
+    return (DB_SUCCESS);
+}
 
 static void
 create_directory(
-	/*=============*/
-	const char *path)
+    /*=============*/
+    const char *path)
 {
-	int ret;
-	/* Try and create the log sub-directory */
-	ret = mkdir(path, S_IRWXU);
+    int ret;
+    /* Try and create the log sub-directory */
+    ret = mkdir(path, S_IRWXU);
 
-	/* Note: This doesn't catch all errors. EEXIST can also refer to
+    /* Note: This doesn't catch all errors. EEXIST can also refer to
 	dangling symlinks. */
-	if (ret == -1 && errno != EEXIST)
-	{
-		perror(path);
-		exit(EXIT_FAILURE);
-	}
+    if (ret == -1 && errno != EEXIST)
+    {
+        perror(path);
+        exit(EXIT_FAILURE);
+    }
 }
 
 void test_configure(void)
 /*================*/
 {
-	ib_err_t err;
+    ib_err_t err;
 
-	create_directory(log_group_home_dir);
+    create_directory(log_group_home_dir);
 
-	err = ib_cfg_set_text("flush_method", "O_DIRECT");
-	assert(err == DB_SUCCESS);
+    err = ib_cfg_set_text("flush_method", "O_DIRECT");
+    assert(err == DB_SUCCESS);
 
-	err = ib_cfg_set_int("log_files_in_group", 2);
-	assert(err == DB_SUCCESS);
+    err = ib_cfg_set_int("log_files_in_group", 2);
+    assert(err == DB_SUCCESS);
 
-	err = ib_cfg_set_int("log_file_size", 32 * 1024 * 1024);
-	assert(err == DB_SUCCESS);
+    err = ib_cfg_set_int("log_file_size", 32 * 1024 * 1024);
+    assert(err == DB_SUCCESS);
 
-	err = ib_cfg_set_int("log_buffer_size", 24 * 16384);
-	assert(err == DB_SUCCESS);
+    err = ib_cfg_set_int("log_buffer_size", 24 * 16384);
+    assert(err == DB_SUCCESS);
 
-	err = ib_cfg_set_int("buffer_pool_size", 5 * 1024 * 1024);
-	assert(err == DB_SUCCESS);
+    err = ib_cfg_set_int("buffer_pool_size", 5 * 1024 * 1024);
+    assert(err == DB_SUCCESS);
 
-	err = ib_cfg_set_int("additional_mem_pool_size", 4 * 1024 * 1024);
-	assert(err == DB_SUCCESS);
+    err = ib_cfg_set_int("additional_mem_pool_size", 4 * 1024 * 1024);
+    assert(err == DB_SUCCESS);
 
-	err = ib_cfg_set_int("flush_log_at_trx_commit", 1);
-	assert(err == DB_SUCCESS);
+    err = ib_cfg_set_int("flush_log_at_trx_commit", 1);
+    assert(err == DB_SUCCESS);
 
-	err = ib_cfg_set_int("file_io_threads", 4);
-	assert(err == DB_SUCCESS);
+    err = ib_cfg_set_int("file_io_threads", 4);
+    assert(err == DB_SUCCESS);
 
-	err = ib_cfg_set_int("lock_wait_timeout", 60);
-	assert(err == DB_SUCCESS);
+    err = ib_cfg_set_int("lock_wait_timeout", 60);
+    assert(err == DB_SUCCESS);
 
-	err = ib_cfg_set_int("open_files", 300);
-	assert(err == DB_SUCCESS);
+    err = ib_cfg_set_int("open_files", 300);
+    assert(err == DB_SUCCESS);
 
-	err = ib_cfg_set_bool_on("doublewrite");
-	assert(err == DB_SUCCESS);
+    err = ib_cfg_set_bool_on("doublewrite");
+    assert(err == DB_SUCCESS);
 
-	err = ib_cfg_set_bool_on("checksums");
-	assert(err == DB_SUCCESS);
+    err = ib_cfg_set_bool_on("checksums");
+    assert(err == DB_SUCCESS);
 
-	err = ib_cfg_set_bool_on("rollback_on_timeout");
-	assert(err == DB_SUCCESS);
+    err = ib_cfg_set_bool_on("rollback_on_timeout");
+    assert(err == DB_SUCCESS);
 
-	err = ib_cfg_set_bool_on("print_verbose_log");
-	assert(err == DB_SUCCESS);
+    err = ib_cfg_set_bool_on("print_verbose_log");
+    assert(err == DB_SUCCESS);
 
-	err = ib_cfg_set_bool_on("file_per_table");
-	assert(err == DB_SUCCESS);
+    err = ib_cfg_set_bool_on("file_per_table");
+    assert(err == DB_SUCCESS);
 
-	err = ib_cfg_set_text("data_home_dir", "./");
-	assert(err == DB_SUCCESS);
+    err = ib_cfg_set_text("data_home_dir", "./");
+    assert(err == DB_SUCCESS);
 
-	err = ib_cfg_set_text("log_group_home_dir", log_group_home_dir);
+    err = ib_cfg_set_text("log_group_home_dir", log_group_home_dir);
 
-	if (err != DB_SUCCESS)
-	{
-		fprintf(stderr,
-				"syntax error in log_group_home_dir, or a "
-				"wrong number of mirrored log groups\n");
-		exit(1);
-	}
+    if (err != DB_SUCCESS)
+    {
+        fprintf(stderr,
+                "syntax error in log_group_home_dir, or a "
+                "wrong number of mirrored log groups\n");
+        exit(1);
+    }
 
-	err = ib_cfg_set_text("data_file_path", data_file_path);
+    err = ib_cfg_set_text("data_file_path", data_file_path);
 
-	if (err != DB_SUCCESS)
-	{
-		fprintf(stderr,
-				"InnoDB: syntax error in data_file_path\n");
-		exit(1);
-	}
+    if (err != DB_SUCCESS)
+    {
+        fprintf(stderr,
+                "InnoDB: syntax error in data_file_path\n");
+        exit(1);
+    }
 }
 
 ib_err_t
 drop_table(
-/*=======*/
-	const char*	dbname,			/*!< in: database name */
-	const char*	name)			/*!< in: table to drop */
+    /*=======*/
+    const char *dbname, /*!< in: database name */
+    const char *name)   /*!< in: table to drop */
 {
-	ib_err_t	err;
-	ib_trx_t	ib_trx;
-	char		table_name[IB_MAX_TABLE_NAME_LEN];
+    ib_err_t err;
+    ib_trx_t ib_trx;
+    char table_name[IB_MAX_TABLE_NAME_LEN];
 
 #ifdef __WIN__
-	sprintf(table_name, "%s/%s", dbname, name);
+    sprintf(table_name, "%s/%s", dbname, name);
 #else
-	snprintf(table_name, sizeof(table_name), "%s/%s", dbname, name);
+    snprintf(table_name, sizeof(table_name), "%s/%s", dbname, name);
 #endif
 
-	ib_trx = ib_trx_begin(IB_TRX_REPEATABLE_READ);
-	assert(ib_trx != NULL);
+    ib_trx = ib_trx_begin(IB_TRX_REPEATABLE_READ);
+    assert(ib_trx != NULL);
 
-	err = ib_schema_lock_exclusive(ib_trx);
-	assert(err == DB_SUCCESS);
+    err = ib_schema_lock_exclusive(ib_trx);
+    assert(err == DB_SUCCESS);
 
-	err = ib_table_drop(ib_trx, table_name);
-	assert(err == DB_SUCCESS);
+    err = ib_table_drop(ib_trx, table_name);
+    assert(err == DB_SUCCESS);
 
-	err = ib_trx_commit(ib_trx);
-	assert(err == DB_SUCCESS);
+    err = ib_trx_commit(ib_trx);
+    assert(err == DB_SUCCESS);
 
-	return(err);
+    return (err);
 }
 
 void print_char_array(
@@ -152,6 +164,7 @@ void print_char_array(
     {
         fprintf(stream, "%c", *(ptr + i));
     }
+    fprintf(stream, "\t");
 }
 
 /*********************************************************************
@@ -324,4 +337,3 @@ void print_tuple(
     }
     fprintf(stream, "\n");
 }
-
