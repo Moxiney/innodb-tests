@@ -90,27 +90,6 @@ create_table(
     return (err);
 }
 
-/*********************************************************************
-Open a table and return a cursor for the table. */
-static ib_err_t
-open_table(
-    /*=======*/
-    const char *dbname, /*!< in: database name */
-    const char *name,   /*!< in: table name */
-    ib_trx_t ib_trx,    /*!< in: transaction */
-    ib_crsr_t *crsr)    /*!< out: innodb cursor */
-{
-    ib_err_t err = DB_SUCCESS;
-    char table_name[IB_MAX_TABLE_NAME_LEN];
-
-    snprintf(table_name, sizeof(table_name), "%s/%s", dbname, name);
-
-    err = ib_cursor_open_table(table_name, ib_trx, crsr);
-    assert(err == DB_SUCCESS);
-
-    return (err);
-}
-
 ib_err_t gen_tuple(ib_tpl_t &tpl, int pkey)
 {
     char pkey_str[COL_LEN] = "";
@@ -226,50 +205,6 @@ ib_err_t ib_col_set_value(ib_tpl_t &tpl, ib_ulint_t col, int val)
     return err;
 }
 
-ib_err_t ycsb_init(
-    const char *dbname,
-    const char *name)
-{
-    ib_err_t err;
-    ib_crsr_t crsr;
-    ib_trx_t ib_trx;
-
-    printf("Create table\n");
-    err = create_table(dbname, name);
-    assert(err == DB_SUCCESS);
-
-    printf("Begin transaction\n");
-    ib_trx = ib_trx_begin(IB_TRX_REPEATABLE_READ);
-    assert(ib_trx != NULL);
-
-    printf("Open cursor\n");
-    err = open_table(dbname, name, ib_trx, &crsr);
-    assert(err == DB_SUCCESS);
-
-    printf("Lock table in IX\n");
-    err = ib_cursor_lock(crsr, IB_LOCK_IX);
-    assert(err == DB_SUCCESS);
-
-    printf("Insert rows\n");
-    err = insert_rows(crsr);
-    assert(err == DB_SUCCESS);
-
-    printf("Query table\n");
-    err = do_query(crsr);
-    assert(err == DB_SUCCESS);
-
-    printf("Close cursor\n");
-    err = ib_cursor_close(crsr);
-    assert(err == DB_SUCCESS);
-    crsr = NULL;
-
-    printf("Commit transaction\n");
-    err = ib_trx_commit(ib_trx);
-    assert(err == DB_SUCCESS);
-
-    return err;
-}
-
 ib_err_t update_tuple(ib_crsr_t crsr, int pkey)
 {
     ib_err_t err;
@@ -282,7 +217,7 @@ ib_err_t update_tuple(ib_crsr_t crsr, int pkey)
     assert(err == DB_SUCCESS);
 
     /* Set the record lock mode */
-    err = ib_cursor_set_lock_mode(index_crsr, IB_LOCK_X);
+    err = ib_cursor_set_lock_mode(index_crsr, IB_LOCK_S);
     assert(err == DB_SUCCESS);
 
     /* Since we will be updating the clustered index record, set the
@@ -302,6 +237,13 @@ ib_err_t update_tuple(ib_crsr_t crsr, int pkey)
 
     /* Search for the key using the cluster index (PK) */
     err = ib_cursor_moveto(index_crsr, sec_key_tpl, IB_CUR_GE, &res);
+    if (err == DB_DEADLOCK || err == DB_LOCK_WAIT_TIMEOUT)
+    {
+        auto tmp_err = ib_cursor_close(index_crsr);
+        assert(tmp_err == DB_SUCCESS);
+        printf("deadlock!\n");
+        return err;
+    }
     assert(err == DB_SUCCESS || err == DB_END_OF_INDEX || err == DB_RECORD_NOT_FOUND);
 
     ib_tuple_delete(sec_key_tpl);
@@ -391,10 +333,16 @@ ib_err_t read_tuple(ib_crsr_t crsr, int pkey)
     err = ib_col_set_value(sec_key_tpl, 0, pkey_str, COL_LEN);
     assert(err == DB_SUCCESS);
 
-    // print_tuple(stdout, sec_key_tpl);
-
     /* Search for the key using the cluster index (PK) */
     err = ib_cursor_moveto(index_crsr, sec_key_tpl, IB_CUR_GE, &res);
+    assert(err == DB_SUCCESS || err == DB_DEADLOCK || err == DB_LOCK_WAIT_TIMEOUT);
+    if (err == DB_DEADLOCK || err == DB_LOCK_WAIT_TIMEOUT)
+    {
+        auto tmp_err = ib_cursor_close(index_crsr);
+        assert(tmp_err == DB_SUCCESS);
+        printf("deadlock!\n");
+        return err;
+    }
     assert(err == DB_SUCCESS || err == DB_END_OF_INDEX || err == DB_RECORD_NOT_FOUND);
 
     ib_tuple_delete(sec_key_tpl);
@@ -421,7 +369,7 @@ ib_err_t read_tuple(ib_crsr_t crsr, int pkey)
         err = ib_cursor_read_row(index_crsr, old_tpl);
         assert(err == DB_SUCCESS);
 
-        // print_tuple(stdout, old_tpl);
+        print_tuple(stdout, old_tpl);
 
         /* Reset the old and new tuple instances. */
         old_tpl = ib_tuple_clear(old_tpl);
@@ -441,6 +389,85 @@ ib_err_t read_tuple(ib_crsr_t crsr, int pkey)
     return DB_SUCCESS;
 }
 
+ib_err_t ycsb_display(
+    const char *dbname,
+    const char *name)
+{
+    ib_trx_t ib_trx;
+    ib_err_t err;
+    ib_crsr_t crsr;
+
+    ib_trx = ib_trx_begin(IB_TRX_REPEATABLE_READ);
+    assert(ib_trx != NULL);
+
+    err = open_table(dbname, name, ib_trx, &crsr);
+    assert(err == DB_SUCCESS);
+
+    err = ib_cursor_lock(crsr, IB_LOCK_IS);
+    assert(err == DB_SUCCESS);
+
+    err = do_query(crsr);
+    assert(err == DB_SUCCESS);
+
+
+    err = ib_cursor_close(crsr);
+    assert(err == DB_SUCCESS);
+    crsr = NULL;
+
+    err = ib_trx_commit(ib_trx);
+    assert(err == DB_SUCCESS);
+
+    return err;
+}
+
+ib_err_t ycsb_init(
+    const char *dbname,
+    const char *name)
+{
+    ib_err_t err;
+    ib_crsr_t crsr;
+    ib_trx_t ib_trx;
+
+    printf("Create table\n");
+    err = create_table(dbname, name);
+    assert(err == DB_SUCCESS);
+
+    printf("Begin transaction\n");
+    ib_trx = ib_trx_begin(IB_TRX_REPEATABLE_READ);
+    assert(ib_trx != NULL);
+
+    printf("Open cursor\n");
+    err = open_table(dbname, name, ib_trx, &crsr);
+    assert(err == DB_SUCCESS);
+
+    printf("Lock table in IX\n");
+    err = ib_cursor_lock(crsr, IB_LOCK_IX);
+    assert(err == DB_SUCCESS);
+
+    printf("Insert rows\n");
+    err = insert_rows(crsr);
+    assert(err == DB_SUCCESS);
+
+    // printf("Query table\n");
+    // err = do_query(crsr);
+    // assert(err == DB_SUCCESS);
+
+    printf("Close cursor\n");
+    err = ib_cursor_close(crsr);
+    assert(err == DB_SUCCESS);
+    crsr = NULL;
+
+    printf("Commit transaction\n");
+    err = ib_trx_commit(ib_trx);
+    assert(err == DB_SUCCESS);
+
+    printf("Query table\n");
+    err = ycsb_display(dbname, name);
+    assert(err == DB_SUCCESS);
+
+    return err;
+}
+
 ib_err_t ycsb_run_txn(
     const char *dbname,
     const char *name,
@@ -450,7 +477,6 @@ ib_err_t ycsb_run_txn(
     ib_crsr_t crsr;
     ib_trx_t ib_trx;
 
-    
     RandomGenerator rnd;
 
     // barrier->wait()
@@ -459,6 +485,7 @@ ib_err_t ycsb_run_txn(
     {
         round--;
         int query_num = rnd.randomInt() % 10 + 1;
+        bool deadlock = false;
 
         ib_trx = ib_trx_begin(IB_TRX_REPEATABLE_READ);
         assert(ib_trx != NULL);
@@ -466,7 +493,7 @@ ib_err_t ycsb_run_txn(
         err = open_table(dbname, name, ib_trx, &crsr);
         assert(err == DB_SUCCESS);
 
-        err = ib_cursor_lock(crsr, IB_LOCK_X);
+        err = ib_cursor_lock(crsr, IB_LOCK_IX);
         assert(err == DB_SUCCESS);
 
         while (query_num)
@@ -474,19 +501,25 @@ ib_err_t ycsb_run_txn(
             // printf("round: %d, query: %d\n", round, query_num);
             query_num--;
             int op = rnd.randomInt() % 100;
-            int pkey = rnd.randomInt()% init_table_size;
+            int pkey = rnd.randomInt() % init_table_size;
 
             if (op < read_ratio)
             {
                 // read random row
                 err = read_tuple(crsr, pkey);
-                assert(err == DB_SUCCESS);
+                assert(err == DB_SUCCESS || err == DB_DEADLOCK || err == DB_LOCK_WAIT_TIMEOUT);
             }
             else
             {
                 // update random row
                 err = update_tuple(crsr, pkey);
-                assert(err == DB_SUCCESS);
+                assert(err == DB_SUCCESS || err == DB_DEADLOCK || err == DB_LOCK_WAIT_TIMEOUT);
+            }
+            // if deadlock, break then release.
+            if (err == DB_DEADLOCK || err == DB_LOCK_WAIT_TIMEOUT)
+            {
+                deadlock = true;
+                break;
             }
         }
 
@@ -494,8 +527,16 @@ ib_err_t ycsb_run_txn(
         assert(err == DB_SUCCESS);
         crsr = NULL;
 
-        err = ib_trx_commit(ib_trx);
-        assert(err == DB_SUCCESS);
+        if (!deadlock)
+        {
+            err = ib_trx_commit(ib_trx);
+            assert(err == DB_SUCCESS);
+        }
+        else
+        {
+            err = ib_trx_release(ib_trx);
+            assert(err == DB_SUCCESS);
+        }
     }
 
     ib_trx = ib_trx_begin(IB_TRX_REPEATABLE_READ);

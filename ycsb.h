@@ -14,3 +14,11 @@ ib_err_t ycsb_run_txn(
     const char *name,
     int read_ratio);
 
+ib_err_t ycsb_display(
+    const char *dbname,
+    const char *name
+);
+
+ib_err_t read_tuple(ib_crsr_t crsr, int pkey);
+
+ib_err_t update_tuple(ib_crsr_t crsr, int pkey);

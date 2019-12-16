@@ -5,7 +5,7 @@ native-test:
 	g++ -c native-test.cpp
 	g++ common.o native-test.o -o native-test -linnodb
 
-ycsb-test:
+ycsb-test: clean
 	g++ -c common.cpp
 	g++ -c ycsb-test.cpp
 	g++ -c ycsb.cpp 

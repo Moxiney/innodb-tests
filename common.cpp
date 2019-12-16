@@ -74,7 +74,7 @@ void test_configure(void)
     err = ib_cfg_set_int("file_io_threads", 4);
     assert(err == DB_SUCCESS);
 
-    err = ib_cfg_set_int("lock_wait_timeout", 60);
+    err = ib_cfg_set_int("lock_wait_timeout", 10);
     assert(err == DB_SUCCESS);
 
     err = ib_cfg_set_int("open_files", 300);
@@ -116,6 +116,27 @@ void test_configure(void)
                 "InnoDB: syntax error in data_file_path\n");
         exit(1);
     }
+}
+
+/*********************************************************************
+Open a table and return a cursor for the table. */
+ib_err_t
+open_table(
+    /*=======*/
+    const char *dbname, /*!< in: database name */
+    const char *name,   /*!< in: table name */
+    ib_trx_t ib_trx,    /*!< in: transaction */
+    ib_crsr_t *crsr)    /*!< out: innodb cursor */
+{
+    ib_err_t err = DB_SUCCESS;
+    char table_name[IB_MAX_TABLE_NAME_LEN];
+
+    snprintf(table_name, sizeof(table_name), "%s/%s", dbname, name);
+
+    err = ib_cursor_open_table(table_name, ib_trx, crsr);
+    assert(err == DB_SUCCESS);
+
+    return (err);
 }
 
 ib_err_t
