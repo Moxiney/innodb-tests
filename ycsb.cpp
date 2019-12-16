@@ -375,7 +375,7 @@ ib_err_t read_tuple(ib_crsr_t crsr, int pkey)
     assert(err == DB_SUCCESS);
 
     /* Set the record lock mode */
-    err = ib_cursor_set_lock_mode(index_crsr, IB_LOCK_X);
+    err = ib_cursor_set_lock_mode(index_crsr, IB_LOCK_S);
     assert(err == DB_SUCCESS);
 
     /* Since we will be updating the clustered index record, set the
@@ -466,12 +466,12 @@ ib_err_t ycsb_run_txn(
         err = open_table(dbname, name, ib_trx, &crsr);
         assert(err == DB_SUCCESS);
 
-        err = ib_cursor_lock(crsr, IB_LOCK_IX);
+        err = ib_cursor_lock(crsr, IB_LOCK_X);
         assert(err == DB_SUCCESS);
 
         while (query_num)
         {
-            printf("round: %d, query: %d\n", round, query_num);
+            // printf("round: %d, query: %d\n", round, query_num);
             query_num--;
             int op = rnd.randomInt() % 100;
             int pkey = rnd.randomInt()% init_table_size;
@@ -498,40 +498,22 @@ ib_err_t ycsb_run_txn(
         assert(err == DB_SUCCESS);
     }
 
-    printf("Begin transaction\n");
     ib_trx = ib_trx_begin(IB_TRX_REPEATABLE_READ);
     assert(ib_trx != NULL);
 
-    printf("Open cursor\n");
     err = open_table(dbname, name, ib_trx, &crsr);
     assert(err == DB_SUCCESS);
 
-    printf("Lock table in IX\n");
     err = ib_cursor_lock(crsr, IB_LOCK_IX);
     assert(err == DB_SUCCESS);
 
-    printf("Query table\n");
     err = do_query(crsr);
     assert(err == DB_SUCCESS);
 
-    // for (int i = 0; i < 5; i++)
-    // {
-    //     int pkey = rnd.randomInt() % 10;
-    //     printf("Update tuple %d\n", pkey);
-    //     err = update_tuple(crsr, pkey);
-    //     assert(err == DB_SUCCESS);
-
-    //     // printf("Query table\n");
-    //     // err = do_query(crsr);
-    //     // assert(err == DB_SUCCESS);
-    // }
-
-    printf("Close cursor\n");
     err = ib_cursor_close(crsr);
     assert(err == DB_SUCCESS);
     crsr = NULL;
 
-    printf("Commit transaction\n");
     err = ib_trx_commit(ib_trx);
     assert(err == DB_SUCCESS);
 
