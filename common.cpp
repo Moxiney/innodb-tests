@@ -43,7 +43,7 @@ create_directory(
     }
 }
 
-void test_configure(void)
+ib_err_t test_configure(void)
 /*================*/
 {
     ib_err_t err;
@@ -116,6 +116,8 @@ void test_configure(void)
                 "InnoDB: syntax error in data_file_path\n");
         exit(1);
     }
+
+    return err;
 }
 
 /*********************************************************************
@@ -137,6 +139,25 @@ open_table(
     assert(err == DB_SUCCESS);
 
     return (err);
+}
+
+ib_err_t database_init(
+    const char *dbname)
+{
+    ib_err_t err;
+    err = ib_init();
+	assert(err == DB_SUCCESS);
+
+	err = test_configure();
+	assert(err == DB_SUCCESS);
+
+	err = ib_startup("barracuda");
+	assert(err == DB_SUCCESS);
+
+	err = create_database(dbname);
+	assert(err == DB_SUCCESS);
+
+    return err;
 }
 
 ib_err_t

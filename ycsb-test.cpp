@@ -36,21 +36,14 @@ int main(int argc, char *argv[])
 		   (int)((version >> 16)) & 0xffff, /* Revisiion */
 		   (int)(version & 0xffff));		/* Age */
 
-	err = ib_init();
-	assert(err == DB_SUCCESS);
 
-	test_configure();
-
-	err = ib_startup("barracuda");
-	assert(err == DB_SUCCESS);
-
-	err = create_database(DATABASE);
+	err = database_init(DATABASE);
 	assert(err == DB_SUCCESS);
 
 	err = ycsb_init(DATABASE, TABLE);
 	assert(err == DB_SUCCESS);
 
-	// single_thread_query
+	// multi_thread_query
 	std::thread threads[thread_num];
 	int num[thread_num];
 	auto barrier = std::make_unique<Barrier>(thread_num + 1);
