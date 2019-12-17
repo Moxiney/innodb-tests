@@ -42,3 +42,5 @@ const ib_tbl_t WAREHOUSE =
         {
             {"W_ID", IB_INT, 8}
         }}
+
+const ib_tbl_t DISTRICT;
