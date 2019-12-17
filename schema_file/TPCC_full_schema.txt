@@ -86,7 +86,7 @@ PKEY reference Customer table.
 TABLE=ORDER-LINE
 	8,int64_t,OL_O_ID
 	8,int64_t,OL_D_ID
-	8,int64_t,OL_W_ID
+	8,int64_t,OL_D_ID
 	8,int64_t,OL_NUMBER
 	8,int64_t,OL_I_ID
 	8,int64_t,OL_SUPPLY_W_ID
