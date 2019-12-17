@@ -21,6 +21,7 @@ struct ib_tbl_t
     char *index_name;
     std::vector<ib_col_t> cols;
     std::vector<ib_col_t> index_cols;
+    ib_err_t create_table(const char *dbname);
 };
 
 const ib_tbl_t WAREHOUSE =
