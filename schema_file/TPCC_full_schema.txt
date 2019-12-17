@@ -9,6 +9,7 @@ TABLE=WAREHOUSE
 	9,string,W_ZIP
 	8,double,W_TAX
 	8,double,W_YTD
+PKEY = W_ID
 
 TABLE=DISTRICT
 	8,int64_t,D_ID
@@ -22,6 +23,8 @@ TABLE=DISTRICT
 	8,double,D_TAX
 	8,double,D_YTD
 	8,int64_t,D_NEXT_O_ID
+PKEY = D_W_ID, D_ID
+D_W_ID reference W_ID
 
 TABLE=CUSTOMER
 	8,int64_t,C_ID
@@ -45,7 +48,9 @@ TABLE=CUSTOMER
 	8,uint64_t,C_PAYMENT_CNT
 	8,uint64_t,C_DELIVERY_CNT
 	500,string,C_DATA
-	
+PKEY=C_W_ID, C_D_ID, C_ID
+C_W_ID, C_D_ID reference D_W_ID, D_ID
+
 TABLE=HISTORY
 	8,int64_t,H_C_ID
 	8,int64_t,H_C_D_ID
@@ -55,11 +60,15 @@ TABLE=HISTORY
 	8,int64_t,H_DATE
 	8,double,H_AMOUNT
 	24,string,H_DATA
+No pkey
+
 
 TABLE=NEW-ORDER
 	8,int64_t,NO_O_ID
 	8,int64_t,NO_D_ID
 	8,int64_t,NO_W_ID
+PKEY=NO_W_ID, NO_D_ID, NO_O_ID
+PKEY reference O_W_ID, O_D_ID, O_ID
 
 TABLE=ORDER
 	8,int64_t,O_ID
@@ -70,6 +79,9 @@ TABLE=ORDER
 	8,int64_t,O_CARRIER_ID
 	8,int64_t,O_OL_CNT
 	8,int64_t,O_ALL_LOCAL
+PKEY=O_W_ID, O_D_ID, O_ID
+PKEY reference Customer table.
+
 
 TABLE=ORDER-LINE
 	8,int64_t,OL_O_ID
@@ -89,6 +101,7 @@ TABLE=ITEM
 	24,string,I_NAME
 	8,int64_t,I_PRICE
 	50,string,I_DATA
+PKEY = I_ID
 
 TABLE=STOCK
 	8,int64_t,S_I_ID
@@ -108,6 +121,9 @@ TABLE=STOCK
 	8,int64_t,S_ORDER_CNT
 	8,int64_t,S_REMOTE_CNT
 	50,string,S_DATA
+PKEY =S_W_ID, S_I_ID
+S_W_ID -> W_ID
+S_I_ID -> I_ID
 
 INDEX=ITEM_IDX
 ITEM,400000
