@@ -9,8 +9,8 @@ ycsb-test: clean
 	g++ -c common.cpp
 	g++ -c ycsb-test.cpp
 	g++ -c ycsb.cpp 
-	g++ common.o ycsb-test.o ycsb.o -o ycsb-test -linnodb
-
+	g++ common.o ycsb-test.o ycsb.o -o ycsb-test -linnodb -pthread
+	./ycsb-test
 
 run:
 	./native-test

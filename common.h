@@ -3,6 +3,7 @@
 #include "/usr/local/include/embedded_innodb-1.0/innodb.h"
 #include <cstdlib>
 #include <cstring>
+#include <atomic>
 
 static void
 create_directory(
@@ -80,3 +81,17 @@ public:
     }
     long long Next() { return randomInt(); }
 } __attribute__((aligned(64)));
+
+
+class Barrier{
+        int threads_num;
+        std::atomic<int> now_threads;
+    public:
+        Barrier(int threads_num_): threads_num(threads_num_){
+            now_threads.store(0);
+        }
+        void wait(){
+            now_threads.fetch_add(1);
+            while(now_threads.load() != threads_num) {}
+        }
+    };

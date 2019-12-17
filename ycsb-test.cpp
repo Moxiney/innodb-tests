@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <string.h>
 #include <ctype.h>
+#include <thread>
 
 #include "/usr/local/include/embedded_innodb-1.0/innodb.h"
 #include "common.h"
@@ -12,10 +13,18 @@
 #define TABLE "t"
 #define INDEX "F0"
 
-int main()
+int main(int argc, char *argv[])
 {
-	init_table_size = 10;
+	init_table_size = 100000;
 	int read_ratio = 50;
+	int thread_num = 10;
+	int duration = 10;
+
+	// Parse args
+
+
+
+
 	ib_err_t err;
 	ib_crsr_t crsr;
 	ib_trx_t ib_trx;
@@ -42,85 +51,43 @@ int main()
 	assert(err == DB_SUCCESS);
 
 	// single_thread_query
+	std::thread threads[thread_num];
+	int num[thread_num];
+	auto barrier = std::make_unique<Barrier>(thread_num + 1);
 
-	// err = ycsb_run_txn(DATABASE, TABLE, read_ratio);
-	// assert(err == DB_SUCCESS);
-
-	ib_trx_t trx_1, trx_2;
-	ib_crsr_t crsr_1, crsr_2;
-
-	trx_1 = ib_trx_begin(IB_TRX_REPEATABLE_READ);
-	assert(ib_trx != NULL);
-
-	trx_2 = ib_trx_begin(IB_TRX_REPEATABLE_READ);
-	assert(ib_trx != NULL);
-
-	err = open_table(DATABASE, TABLE, trx_1, &crsr_1);
-	assert(err == DB_SUCCESS);
-
-	err = open_table(DATABASE, TABLE, trx_2, &crsr_2);
-	assert(err == DB_SUCCESS);
-
-	err = ib_cursor_lock(crsr_1, IB_LOCK_IX);
-	assert(err == DB_SUCCESS);
-
-	err = ib_cursor_lock(crsr_2, IB_LOCK_IX);
-	assert(err == DB_SUCCESS);
-
-	printf("\n");
-	err = update_tuple(crsr_2, 6);
-	assert(err == DB_SUCCESS);
-	err = read_tuple(crsr_2, 6);
-	assert(err == DB_SUCCESS);
-
-	err = update_tuple(crsr_1, 5);
-	assert(err == DB_SUCCESS);
-
-	err = read_tuple(crsr_1, 5);
-	assert(err == DB_SUCCESS);
-
-	err = update_tuple(crsr_2, 5);
-	if (err != DB_SUCCESS)
+	for (int i = 0; i < thread_num; i++)
 	{
-		assert(ib_trx_state(trx_2) != IB_TRX_ACTIVE);
-
-		err = ib_cursor_close(crsr_2);
-		assert(err == DB_SUCCESS);
-		crsr_2 = NULL;
-
-		err = ib_trx_release(trx_2);
-		assert(err == DB_SUCCESS);
-		printf("trx2 rolled back\n");
+		num[i] = 0;
+		threads[i] = std::thread(
+			[&](int id) {
+				printf("thread %d start to run_txn\n", id);
+				err = ycsb_run_txn(DATABASE, TABLE, read_ratio, id, num[id], barrier.get());
+				assert(err == DB_SUCCESS);
+			},
+			i);
 	}
-	else
+
+	barrier->wait();
+    std::this_thread::sleep_for(std::chrono::seconds(duration));
+    done = 1;
+	
+	printf("done, wait for join\n");
+
+	int res = 0;
+	for (int i = 0; i < thread_num; i++)
 	{
-		err = ib_cursor_close(crsr_2);
-		assert(err == DB_SUCCESS);
-		crsr_2 = NULL;
-		err = ib_trx_commit(trx_2);
-		assert(err == DB_SUCCESS);
-		printf("trx2 committed back\n");
+		threads[i].join();
+		res += num[i];
 	}
-	assert(err == DB_SUCCESS);
-
-	err = ib_cursor_close(crsr_1);
-	assert(err == DB_SUCCESS);
-	crsr_1 = NULL;
-	err = ib_trx_commit(trx_1);
-	assert(err == DB_SUCCESS);
-	printf("trx1 committed back\n");
-
-
-	err = ycsb_display(DATABASE, TABLE);
-	assert(err == DB_SUCCESS);
-
-
+	
 	printf("Drop table\n");
 	err = drop_table(DATABASE, TABLE);
 	assert(err == DB_SUCCESS);
 
 	err = ib_shutdown(IB_SHUTDOWN_NORMAL);
 	assert(err == DB_SUCCESS);
+
+	printf("total res %d, tps %f\n", res, (double)res/duration);
 
 	return (EXIT_SUCCESS);
 }

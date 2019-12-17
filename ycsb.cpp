@@ -7,9 +7,10 @@
 #include <thread>
 
 #include "ycsb.h"
-#include "common.h"
+
 
 int init_table_size = 10;
+int done = 0;
 #define COL_LEN 10
 
 typedef struct row_t
@@ -97,7 +98,7 @@ ib_err_t gen_tuple(ib_tpl_t &tpl, int pkey)
     auto err = ib_col_set_value(tpl, 0, pkey_str, COL_LEN);
     assert(err == DB_SUCCESS);
 
-    printf("%s ", pkey_str);
+    // printf("%s ", pkey_str);
 
     for (int i = 1; i < 10; i++)
     {
@@ -106,7 +107,7 @@ ib_err_t gen_tuple(ib_tpl_t &tpl, int pkey)
         auto err = ib_col_set_value(tpl, i, val_str, COL_LEN);
         assert(err == DB_SUCCESS);
 
-        printf("%s ", val_str);
+        // printf("%s ", val_str);
     }
 
     return err;
@@ -135,7 +136,7 @@ insert_rows(
         tpl = ib_tuple_clear(tpl);
         assert(tpl != NULL);
 
-        printf("Add tuple %d\n", i);
+        // printf("Add tuple %d\n", i);
     }
 
     if (tpl != NULL)
@@ -241,7 +242,7 @@ ib_err_t update_tuple(ib_crsr_t crsr, int pkey)
     {
         auto tmp_err = ib_cursor_close(index_crsr);
         assert(tmp_err == DB_SUCCESS);
-        printf("deadlock!\n");
+        // printf("deadlock!\n");
         return err;
     }
     assert(err == DB_SUCCESS || err == DB_END_OF_INDEX || err == DB_RECORD_NOT_FOUND);
@@ -340,7 +341,7 @@ ib_err_t read_tuple(ib_crsr_t crsr, int pkey)
     {
         auto tmp_err = ib_cursor_close(index_crsr);
         assert(tmp_err == DB_SUCCESS);
-        printf("deadlock!\n");
+        // printf("deadlock!\n");
         return err;
     }
     assert(err == DB_SUCCESS || err == DB_END_OF_INDEX || err == DB_RECORD_NOT_FOUND);
@@ -369,7 +370,7 @@ ib_err_t read_tuple(ib_crsr_t crsr, int pkey)
         err = ib_cursor_read_row(index_crsr, old_tpl);
         assert(err == DB_SUCCESS);
 
-        print_tuple(stdout, old_tpl);
+        // print_tuple(stdout, old_tpl);
 
         /* Reset the old and new tuple instances. */
         old_tpl = ib_tuple_clear(old_tpl);
@@ -461,9 +462,9 @@ ib_err_t ycsb_init(
     err = ib_trx_commit(ib_trx);
     assert(err == DB_SUCCESS);
 
-    printf("Query table\n");
-    err = ycsb_display(dbname, name);
-    assert(err == DB_SUCCESS);
+    // printf("Query table\n");
+    // err = ycsb_display(dbname, name);
+    // assert(err == DB_SUCCESS);
 
     return err;
 }
@@ -471,7 +472,10 @@ ib_err_t ycsb_init(
 ib_err_t ycsb_run_txn(
     const char *dbname,
     const char *name,
-    int read_ratio)
+    int read_ratio,
+    int thread_id, 
+    int &num, 
+    Barrier *barrier)
 {
     ib_err_t err;
     ib_crsr_t crsr;
@@ -479,11 +483,12 @@ ib_err_t ycsb_run_txn(
 
     RandomGenerator rnd;
 
-    // barrier->wait()
-    int round = 100;
-    while (round)
+    barrier->wait();
+    //int trx_num = 1000;
+    while (done == 0)
     {
-        round--;
+        //trx_num--;
+        // printf("thread id: %d, txn id: %d\n", thread_id, trx_num);
         int query_num = rnd.randomInt() % 10 + 1;
         bool deadlock = false;
 
@@ -498,20 +503,23 @@ ib_err_t ycsb_run_txn(
 
         while (query_num)
         {
-            // printf("round: %d, query: %d\n", round, query_num);
+            
             query_num--;
             int op = rnd.randomInt() % 100;
             int pkey = rnd.randomInt() % init_table_size;
 
+            // printf("[%d-%d]\t", thread_id, trx_num);
             if (op < read_ratio)
             {
                 // read random row
+                // printf("read \t%d\n", pkey);
                 err = read_tuple(crsr, pkey);
                 assert(err == DB_SUCCESS || err == DB_DEADLOCK || err == DB_LOCK_WAIT_TIMEOUT);
             }
             else
             {
                 // update random row
+                // printf("update \t%d\n", pkey);
                 err = update_tuple(crsr, pkey);
                 assert(err == DB_SUCCESS || err == DB_DEADLOCK || err == DB_LOCK_WAIT_TIMEOUT);
             }
@@ -527,36 +535,24 @@ ib_err_t ycsb_run_txn(
         assert(err == DB_SUCCESS);
         crsr = NULL;
 
+        // printf("[%d-%d]\t", thread_id, trx_num);
         if (!deadlock)
         {
             err = ib_trx_commit(ib_trx);
             assert(err == DB_SUCCESS);
+            // printf("committed\n\n");
+            num++;
         }
         else
         {
             err = ib_trx_release(ib_trx);
             assert(err == DB_SUCCESS);
+            // printf("aborted\n\n");
         }
     }
 
-    ib_trx = ib_trx_begin(IB_TRX_REPEATABLE_READ);
-    assert(ib_trx != NULL);
-
-    err = open_table(dbname, name, ib_trx, &crsr);
-    assert(err == DB_SUCCESS);
-
-    err = ib_cursor_lock(crsr, IB_LOCK_IX);
-    assert(err == DB_SUCCESS);
-
-    err = do_query(crsr);
-    assert(err == DB_SUCCESS);
-
-    err = ib_cursor_close(crsr);
-    assert(err == DB_SUCCESS);
-    crsr = NULL;
-
-    err = ib_trx_commit(ib_trx);
-    assert(err == DB_SUCCESS);
-
+    // err = ycsb_display(dbname, name);
+    // assert(err == DB_SUCCESS);
+    // printf("success txn num %d\n", num);
     return err;
 }
