@@ -5,6 +5,8 @@
 
 extern int done;
 
+#define ASSERT(err) assert(err == DB_SUCCESS)
+
 struct ib_col_t {
     char* name;
     ib_col_type_t type;

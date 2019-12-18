@@ -1,4 +1,6 @@
 #include "tpcc.h"
+#include "common.h"
+#include <assert.h>
 
 int done = 0;
 
@@ -14,6 +16,8 @@ ib_err_t ib_tbl_t::drop_table(const char *dbname) {
 
 ib_err_t ib_db_t::init() {
     // To do: init db and tables
+    auto err = database_init(dbname);
+    ASSERT(err);
     return DB_SUCCESS;
 }
 
