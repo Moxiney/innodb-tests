@@ -107,6 +107,10 @@ ib_err_t tpcc_db_t::init()
 ib_err_t tpcc_db_t::init_tables_data()
 {
     // To do: Huge work
+    
+    
+    tpcc_rdm.resize(num_wh);
+    
     auto err = init_item_data();
     return err;
 }
@@ -139,13 +143,14 @@ ib_err_t tpcc_db_t::init_item_data()
 
     auto tpl = ib_clust_read_tuple_create(crsr);
 
-    for (ib_ulint_t i = 0; i < 1; i++) {
+    for (ib_ulint_t i = 0; i < 5; i++) {
         // insert tuple with id = i
         // To do
         err = ib_col_set_value(tpl, I_ID, &i, item_tbl.cols[I_ID].len);
         ASSERT(err);
-        printf("rand %d\n", Rand(0,5));
-
+        auto val = URand(1,10000, 0);
+        err = ib_col_set_value(tpl, I_IM_ID, &val, item_tbl.cols[I_IM_ID].len);
+        ASSERT(err);
 
 
         err = ib_cursor_insert_row(crsr, tpl);
@@ -174,28 +179,28 @@ ib_err_t tpcc_db_t::init_item_data()
 
     return DB_SUCCESS;
 }
-ib_err_t tpcc_db_t::init_wh_data()
+ib_err_t tpcc_db_t::init_wh_data(int wh_id)
 {
     // To do
     return DB_SUCCESS;
 }
-ib_err_t tpcc_db_t::init_dist_data(){
+ib_err_t tpcc_db_t::init_dist_data(int wh_id){
     // To do
     return DB_SUCCESS;
 }
-ib_err_t tpcc_db_t::init_cust_data(){
+ib_err_t tpcc_db_t::init_cust_data(int wh_id){
     // To do
     return DB_SUCCESS;
 }
-ib_err_t tpcc_db_t::init_stock_data(){
+ib_err_t tpcc_db_t::init_stock_data(int wh_id){
     // To do
     return DB_SUCCESS;
 }
-ib_err_t tpcc_db_t::init_hist_data(){
+ib_err_t tpcc_db_t::init_hist_data(int wh_id){
     // To do
     return DB_SUCCESS;
 }
-ib_err_t tpcc_db_t::init_order_data(){
+ib_err_t tpcc_db_t::init_order_data(int wh_id){
     return DB_SUCCESS;
 }
 

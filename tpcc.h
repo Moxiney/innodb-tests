@@ -59,12 +59,12 @@ public:
     ib_err_t init_tables_data();
 private:
     ib_err_t init_item_data();
-    ib_err_t init_wh_data();
-    ib_err_t init_dist_data();
-    ib_err_t init_cust_data();
-    ib_err_t init_stock_data();
-    ib_err_t init_hist_data();
-    ib_err_t init_order_data();
+    ib_err_t init_wh_data(int wh_id);
+    ib_err_t init_dist_data(int wh_id);
+    ib_err_t init_cust_data(int wh_id);
+    ib_err_t init_stock_data(int wh_id);
+    ib_err_t init_hist_data(int wh_id);
+    ib_err_t init_order_data(int wh_id);
 };
 
 ib_err_t tpcc_run_txn(tpcc_db_t tpcc_db);

@@ -15,9 +15,9 @@
 
 int main(int argc, char *argv[])
 {
-	init_table_size = 100000;
+	init_table_size = 100;
 	int read_ratio = 50;
-	int thread_num = 10;
+	int thread_num = 1;
 	int duration = 10;
 
 	// Parse args
