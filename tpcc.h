@@ -3,6 +3,8 @@
 #include <vector>
 // 定义col, table等数据结构, 以及一些辅助函数.
 
+extern int done;
+
 struct ib_col_t {
     char* name;
     ib_col_type_t type;
@@ -22,6 +24,10 @@ struct ib_tbl_t {
 struct ib_db_t {
     char *dbname;
     std::vector<ib_tbl_t> tbls;
+    ib_err_t init();
+    ib_err_t shutdown();
 };
+
+ib_err_t tpcc_run_txn(ib_db_t tpcc_db);
 
 
