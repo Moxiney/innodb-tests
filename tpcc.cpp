@@ -1,6 +1,7 @@
 #include "tpcc.h"
 #include "common.h"
 #include "tpcc-aux.h"
+#include "tpcc-helper.h"
 #include <assert.h>
 
 int done = 0;
@@ -122,12 +123,13 @@ ib_err_t tpcc_db_t::init_item_data()
     ib_err_t err;
     ib_crsr_t crsr;
     ib_trx_t ib_trx;
+    auto item_tbl = tbls[item];
 
     printf("Begin init_data transaction\n");
     ib_trx = ib_trx_begin(IB_TRX_REPEATABLE_READ);
     assert(ib_trx != NULL);
 
-    printf("Open cursor of %s\n", tbls[item].name);
+    printf("Open cursor of %s\n", item_tbl.name);
     err = open_table(dbname, tbls[item].name, ib_trx, &crsr);
     ASSERT(err);
 
@@ -135,18 +137,30 @@ ib_err_t tpcc_db_t::init_item_data()
     err = ib_cursor_lock(crsr, IB_LOCK_IX);
     ASSERT(err);
 
-    for (int i = 0; i < TPCCConfig::g_max_items; i++) {
+    auto tpl = ib_clust_read_tuple_create(crsr);
+
+    for (ib_ulint_t i = 0; i < 1; i++) {
         // insert tuple with id = i
         // To do
+        err = ib_col_set_value(tpl, I_ID, &i, item_tbl.cols[I_ID].len);
+        ASSERT(err);
+        printf("rand %d\n", Rand(0,5));
+
+
+
+        err = ib_cursor_insert_row(crsr, tpl);
+        ASSERT(err);
+        tpl = ib_tuple_clear(tpl);
+        ASSERT(err);
     }
 
     // printf("Insert rows\n");
     // err = insert_rows(crsr);
     // ASSERT(err);
 
-    // // printf("Query table\n");
-    // // err = do_query(crsr);
-    // // ASSERT(err);;
+    printf("Query table\n");
+    err = do_query(crsr);
+    ASSERT(err);;
 
     printf("Close cursor\n");
     err = ib_cursor_close(crsr);

@@ -17,7 +17,8 @@ tpcc-test: clean
 	g++ -c tpcc-test.cpp
 	g++ -c tpcc.cpp 
 	g++ -c tpcc-txn.cpp
-	g++ common.o tpcc-test.o tpcc.o -o tpcc-test -linnodb -pthread
+	g++ -c tpcc-helper.cpp
+	g++ common.o tpcc-test.o tpcc.o tpcc-helper.o tpcc-txn.o -o tpcc-test -linnodb -pthread
 	./tpcc-test
 
 run:

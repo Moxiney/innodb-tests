@@ -9,6 +9,7 @@
 #include "common.h"
 #include "tpcc.h"
 #include "tpcc-aux.h"
+#include "tpcc-helper.h"
 
 #define DATABASE "test"
 #define TABLE "t"
@@ -24,7 +25,6 @@ int main(int argc, char *argv[])
 	int duration = 10;
 
 	// Parse args
-
 
 
 
