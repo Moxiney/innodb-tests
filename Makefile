@@ -31,3 +31,4 @@ clean:
 	rm -f ibdata*
 	rm -rf log
 	rm -rf test
+	rm -rf TPCC_DB

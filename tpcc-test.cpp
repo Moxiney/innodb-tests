@@ -38,8 +38,8 @@ int main(int argc, char *argv[])
 		   (int)((version >> 16)) & 0xffff, /* Revisiion */
 		   (int)(version & 0xffff));		/* Age */
 
-    ib_db_t tpcc_db = {
-        "TPCC",
+    tpcc_db_t tpcc_db = {
+        "TPCC_DB",
         {WAREHOUSE, DISTRICT, CUSTOMER, HISTORY, NEW_ORDER, ORDER, ORDER_LINE, ITEM, STOCK}
     };
     err = tpcc_db.init();

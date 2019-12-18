@@ -1,5 +1,5 @@
 #pragma once
-#include <tpcc.h>
+#include "tpcc.h"
 
 const ib_tbl_t WAREHOUSE = {
     "WAREHOUSE",
@@ -148,6 +148,6 @@ const ib_tbl_t STOCK = {
     {{"S_W_ID", IB_INT, 8},
      {"S_I_ID", IB_INT, 8}}};
 
-const ib_db_t tpcc_db = {
+const tpcc_db_t tpcc_db = {
     "tpcc_db",
     {WAREHOUSE, DISTRICT, CUSTOMER, HISTORY, NEW_ORDER, ORDER, ORDER_LINE, ITEM, STOCK}};

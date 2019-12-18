@@ -14,18 +14,18 @@ ib_err_t ib_tbl_t::drop_table(const char *dbname) {
     return DB_SUCCESS;
 }
 
-ib_err_t ib_db_t::init() {
+ib_err_t tpcc_db_t::init() {
     // To do: init db and tables
     auto err = database_init(dbname);
     ASSERT(err);
     return DB_SUCCESS;
 }
 
-ib_err_t ib_db_t::shutdown() {
+ib_err_t tpcc_db_t::shutdown() {
     // To do: drop tables and shutdown
     return DB_SUCCESS;
 }
 
-ib_err_t tpcc_run_txn(ib_db_t db) {
+ib_err_t tpcc_run_txn(tpcc_db_t db) {
     // To do:
 }

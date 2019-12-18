@@ -8,28 +8,28 @@ extern int done;
 #define ASSERT(err) assert(err == DB_SUCCESS)
 
 struct ib_col_t {
-    char* name;
+    const char* name;
     ib_col_type_t type;
     ib_ulint_t len;
 };
 
 
 struct ib_tbl_t {
-    char* table_name;
-    char* index_name;
+    const char* table_name;
+    const char* index_name;
     std::vector<ib_col_t> cols;
     std::vector<ib_col_t> index_cols;
     ib_err_t create_table(const char* dbname);
     ib_err_t drop_table(const char* dbname);
 };
 
-struct ib_db_t {
-    char *dbname;
+struct tpcc_db_t {
+    const char *dbname;
     std::vector<ib_tbl_t> tbls;
     ib_err_t init();
     ib_err_t shutdown();
 };
 
-ib_err_t tpcc_run_txn(ib_db_t tpcc_db);
+ib_err_t tpcc_run_txn(tpcc_db_t tpcc_db);
 
 
