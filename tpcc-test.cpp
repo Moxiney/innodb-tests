@@ -18,6 +18,7 @@ int main(int argc, char *argv[])
 {
 	// To do: assign values
     // init_table_size = 100000;
+	int num_wh = 1;
 	int read_ratio = 50;
 	int thread_num = 10;
 	int duration = 10;
@@ -40,7 +41,8 @@ int main(int argc, char *argv[])
 
     tpcc_db_t tpcc_db = {
         "TPCC",
-        {WAREHOUSE, DISTRICT, CUSTOMER, HISTORY, NEW_ORDER, ORDER, ORDER_LINE, ITEM, STOCK}
+        {WAREHOUSE, DISTRICT, CUSTOMER, HISTORY, NEW_ORDER, ORDER, ORDER_LINE, ITEM, STOCK},
+		num_wh
     };
     err = tpcc_db.init();
 

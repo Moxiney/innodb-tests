@@ -1,5 +1,6 @@
 #include "tpcc.h"
 #include "common.h"
+#include "tpcc-aux.h"
 #include <assert.h>
 
 int done = 0;
@@ -45,7 +46,8 @@ ib_err_t ib_tbl_t::create_table(const char *dbname)
         ASSERT(err);
 
         /* Add cols to index schema and Set prefix length to 0. */
-        for (auto idx_col: idx_cols) {
+        for (auto idx_col : idx_cols)
+        {
             err = ib_index_schema_add_col(ib_idx_sch, idx_col.name, 0);
             ASSERT(err);
             // printf("Add index column %s\n", idx_col.name);
@@ -86,7 +88,8 @@ ib_err_t tpcc_db_t::init()
     auto err = database_init(dbname);
     ASSERT(err);
 
-    for (auto tbl : tbls) {
+    for (auto tbl : tbls)
+    {
         // LOG_INFO start to init table tbl.name
         // printf("start to init table %s.\n", tbl.name);
         err = tbl.create_table(dbname);
@@ -95,15 +98,17 @@ ib_err_t tpcc_db_t::init()
     }
 
     // insert rows to tables
-    err = insert_rows();
+    err = init_tables_data();
     ASSERT(err);
     return err;
 }
 
-ib_err_t tpcc_db_t::insert_rows() {
+ib_err_t tpcc_db_t::init_tables_data()
+{
     // To do: Huge work
+    auto err = init_item_data();
+    return err;
 }
-
 
 ib_err_t tpcc_db_t::shutdown()
 {
@@ -111,7 +116,72 @@ ib_err_t tpcc_db_t::shutdown()
     return DB_SUCCESS;
 }
 
-ib_err_t tpcc_run_txn(tpcc_db_t db)
+ib_err_t tpcc_db_t::init_item_data()
 {
-    // To do:
+    // To do: create a transaction to insert tuple
+    ib_err_t err;
+    ib_crsr_t crsr;
+    ib_trx_t ib_trx;
+
+    printf("Begin init_data transaction\n");
+    ib_trx = ib_trx_begin(IB_TRX_REPEATABLE_READ);
+    assert(ib_trx != NULL);
+
+    printf("Open cursor of %s\n", tbls[item].name);
+    err = open_table(dbname, tbls[item].name, ib_trx, &crsr);
+    ASSERT(err);
+
+    printf("Lock table in IX\n");
+    err = ib_cursor_lock(crsr, IB_LOCK_IX);
+    ASSERT(err);
+
+    for (int i = 0; i < TPCCConfig::g_max_items; i++) {
+        // insert tuple with id = i
+        // To do
+    }
+
+    // printf("Insert rows\n");
+    // err = insert_rows(crsr);
+    // ASSERT(err);
+
+    // // printf("Query table\n");
+    // // err = do_query(crsr);
+    // // ASSERT(err);;
+
+    printf("Close cursor\n");
+    err = ib_cursor_close(crsr);
+    ASSERT(err);
+    crsr = NULL;
+
+    printf("Commit transaction\n");
+    err = ib_trx_commit(ib_trx);
+    ASSERT(err);
+
+
+    return DB_SUCCESS;
 }
+ib_err_t tpcc_db_t::init_wh_data()
+{
+    // To do
+    return DB_SUCCESS;
+}
+ib_err_t tpcc_db_t::init_dist_data(){
+    // To do
+    return DB_SUCCESS;
+}
+ib_err_t tpcc_db_t::init_cust_data(){
+    // To do
+    return DB_SUCCESS;
+}
+ib_err_t tpcc_db_t::init_stock_data(){
+    // To do
+    return DB_SUCCESS;
+}
+ib_err_t tpcc_db_t::init_hist_data(){
+    // To do
+    return DB_SUCCESS;
+}
+ib_err_t tpcc_db_t::init_order_data(){
+    return DB_SUCCESS;
+}
+
