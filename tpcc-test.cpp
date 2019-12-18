@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
 		   (int)(version & 0xffff));		/* Age */
 
     tpcc_db_t tpcc_db = {
-        "TPCC_DB",
+        "TPCC",
         {WAREHOUSE, DISTRICT, CUSTOMER, HISTORY, NEW_ORDER, ORDER, ORDER_LINE, ITEM, STOCK}
     };
     err = tpcc_db.init();

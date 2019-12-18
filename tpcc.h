@@ -1,6 +1,7 @@
 #pragma once
 #include "/usr/local/include/embedded_innodb-1.0/innodb.h"
 #include <vector>
+#include <assert.h>
 // 定义col, table等数据结构, 以及一些辅助函数.
 
 extern int done;
@@ -15,10 +16,10 @@ struct ib_col_t {
 
 
 struct ib_tbl_t {
-    const char* table_name;
-    const char* index_name;
+    const char* name;
+    const char* idx_name;
     std::vector<ib_col_t> cols;
-    std::vector<ib_col_t> index_cols;
+    std::vector<ib_col_t> idx_cols;
     ib_err_t create_table(const char* dbname);
     ib_err_t drop_table(const char* dbname);
 };
@@ -28,6 +29,7 @@ struct tpcc_db_t {
     std::vector<ib_tbl_t> tbls;
     ib_err_t init();
     ib_err_t shutdown();
+    ib_err_t insert_rows();
 };
 
 ib_err_t tpcc_run_txn(tpcc_db_t tpcc_db);
