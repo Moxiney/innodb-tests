@@ -379,3 +379,52 @@ void print_tuple(
     }
     fprintf(stream, "\n");
 }
+
+/*********************************************************************
+SELECT * FROM T; */
+ib_err_t
+do_query(
+    /*=====*/
+    ib_crsr_t crsr)
+{
+    ib_err_t err;
+    ib_tpl_t tpl;
+
+    tpl = ib_clust_read_tuple_create(crsr);
+    assert(tpl != NULL);
+
+    err = ib_cursor_first(crsr);
+    assert(err == DB_SUCCESS);
+
+    while (err == DB_SUCCESS)
+    {
+        err = ib_cursor_read_row(crsr, tpl);
+
+        assert(err == DB_SUCCESS || err == DB_END_OF_INDEX || err == DB_RECORD_NOT_FOUND);
+
+        if (err == DB_RECORD_NOT_FOUND || err == DB_END_OF_INDEX)
+        {
+            break;
+        }
+
+        print_tuple(stdout, tpl);
+
+        err = ib_cursor_next(crsr);
+
+        assert(err == DB_SUCCESS || err == DB_END_OF_INDEX || err == DB_RECORD_NOT_FOUND);
+
+        tpl = ib_tuple_clear(tpl);
+        assert(tpl != NULL);
+    }
+
+    if (tpl != NULL)
+    {
+        ib_tuple_delete(tpl);
+    }
+
+    if (err == DB_RECORD_NOT_FOUND || err == DB_END_OF_INDEX)
+    {
+        err = DB_SUCCESS;
+    }
+    return (err);
+}
