@@ -52,7 +52,7 @@ const ib_tbl_t CUSTOMER = {
      {"C_SINCE", IB_INT, 8},
      {"C_CREDIT", IB_VARCHAR, 2},
      {"C_CREDIT_LIM", IB_INT, 8},
-     {"C_DISCOUNT", IB_INT, 8},
+     {"C_DISCOUNT", IB_DOUBLE, 8},
      {"C_BALANCE", IB_DOUBLE, 8},
      {"C_YTD_PAYMENT", IB_DOUBLE, 8},
      {"C_PAYMENT_CNT", IB_INT, 8},

@@ -77,3 +77,44 @@ std::string MakeNumberString(int min, int max, uint64_t thd_id) {
     }
     return str;
 }
+
+// uint64_t distKey(uint64_t d_id, uint64_t d_w_id) {
+//     return d_w_id * WorkloadConfig::g_dist_per_ware + d_id;
+// }
+
+// uint64_t custKey(uint64_t c_id, uint64_t c_d_id, uint64_t c_w_id) {
+//     return (distKey(c_d_id, c_w_id) * WorkloadConfig::g_cust_per_dist + c_id);
+// }
+
+// uint64_t orderlineKey(uint64_t w_id, uint64_t d_id, uint64_t o_id) {
+//     return distKey(d_id, w_id) * WorkloadConfig::g_cust_per_dist + o_id;
+// }
+
+// uint64_t orderPrimaryKey(uint64_t w_id, uint64_t d_id, uint64_t o_id) {
+//     return orderlineKey(w_id, d_id, o_id);
+// }
+
+// uint64_t custNPKey(const std::string &c_last, uint64_t c_d_id,
+//                    uint64_t c_w_id) {
+//     uint64_t key = 0;
+//     char offset = 'A';
+//     for (char i : c_last)
+//         key = (key << 2) + (i - offset);
+//     key = key << 3;
+//     key += c_w_id * WorkloadConfig::g_dist_per_ware + c_d_id;
+//     return key;
+// }
+
+// uint64_t stockKey(uint64_t s_i_id, uint64_t s_w_id) {
+//     return s_w_id * WorkloadConfig::g_max_items + s_i_id;
+// }
+
+std::string Lastname(uint64_t num) {
+    static const char *n[] = {"BAR", "OUGHT", "ABLE",  "PRI",   "PRES",
+                              "ESE", "ANTI",  "CALLY", "ATION", "EING"};
+    std::string name;
+    name += n[num / 100];
+    name += n[(num / 10) % 10];
+    name += n[num % 10];
+    return name;
+}

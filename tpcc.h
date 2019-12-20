@@ -19,7 +19,7 @@ class TPCCConfig {
      * */
     // TODO: 暂时调小测试正确性
     const static int g_dist_per_ware = 10; // 每个仓库给几个地区供货
-    const static int g_cust_per_dist = 30; // 每个地区客户数量
+    const static int g_cust_per_dist = 4; // 每个地区客户数量
     const static int g_max_items = 10;    // 供应的商品种类
 
     const static int firstname_minlen = 8;
@@ -59,12 +59,12 @@ public:
     ib_err_t init_tables_data();
 private:
     ib_err_t init_item_data();
-    ib_err_t init_wh_data(int wh_id);
-    ib_err_t init_dist_data(int wh_id);
-    ib_err_t init_cust_data(int wh_id);
-    ib_err_t init_stock_data(int wh_id);
-    ib_err_t init_hist_data(int wh_id);
-    ib_err_t init_order_data(int wh_id);
+    ib_err_t init_wh_data(ib_ulint_t wh_id);
+    ib_err_t init_dist_data(ib_ulint_t wh_id);
+    ib_err_t init_stock_data(ib_ulint_t wh_id);
+    ib_err_t init_cust_data(ib_ulint_t wh_id, ib_ulint_t dist_id);
+    ib_err_t init_order_data(ib_ulint_t wh_id, ib_ulint_t dist_id);
+    ib_err_t init_hist_data(ib_ulint_t wh_id, ib_ulint_t dist_id, ib_ulint_t cust_id);
 };
 
 ib_err_t tpcc_run_txn(tpcc_db_t tpcc_db);

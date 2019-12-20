@@ -87,8 +87,7 @@ int main(int argc, char *argv[])
 	// err = drop_table(DATABASE, TABLE);
 	// assert(err == DB_SUCCESS);
 
-	// err = ib_shutdown(IB_SHUTDOWN_NORMAL);
-	// assert(err == DB_SUCCESS);
+	err  = tpcc_db.shutdown();
 
 	// printf("total res %d, tps %f\n", res, (double)res/duration);
 
