@@ -125,7 +125,7 @@ ib_err_t tpcc_db_t::init_tables_data()
             for (uint64_t cust_id = 1; cust_id <= TPCCConfig::g_cust_per_dist; cust_id++)
             {
                 //wl->init_tab_hist(cid, did, wid);
-                // init_hist_data(wh_id, dist_id, cust_id);
+                init_hist_data(wh_id, dist_id, cust_id);
             }
         }
     }
@@ -641,6 +641,64 @@ ib_err_t tpcc_db_t::init_hist_data(ib_ulint_t wh_id, ib_ulint_t dist_id, ib_ulin
 {
     // To do
     printf("History table %ld-%ld-%ld initialization began.\n", wh_id, dist_id, cust_id);
+    ib_err_t err;
+    ib_crsr_t crsr;
+    ib_trx_t ib_trx;
+    auto hist_tbl = tbls[history];
+
+    ib_trx = ib_trx_begin(IB_TRX_REPEATABLE_READ);
+    assert(ib_trx != NULL);
+
+    err = open_table(dbname, hist_tbl.name, ib_trx, &crsr);
+    ASSERT(err);
+
+    //printf("Lock table in IX\n");
+    err = ib_cursor_lock(crsr, IB_LOCK_IX);
+    ASSERT(err);
+
+    auto tpl = ib_clust_read_tuple_create(crsr);
+    // modified tuple and insert
+
+    for (ib_ulint_t cust_id = 1; cust_id <= TPCCConfig::g_cust_per_dist; cust_id++)
+    {
+        std::string field;
+
+        ASSERT(ib_col_set_value(tpl, H_C_ID, &cust_id, hist_tbl.cols[H_C_ID].len));
+        ASSERT(ib_col_set_value(tpl, H_C_D_ID, &dist_id, hist_tbl.cols[H_C_D_ID].len));
+        ASSERT(ib_col_set_value(tpl, H_C_W_ID, &wh_id, hist_tbl.cols[H_C_W_ID].len));
+        ASSERT(ib_col_set_value(tpl, H_D_ID, &dist_id, hist_tbl.cols[H_D_ID].len));
+        ASSERT(ib_col_set_value(tpl, H_W_ID, &wh_id, hist_tbl.cols[H_W_ID].len));
+        ib_ulint_t val = 0;
+        ASSERT(ib_col_set_value(tpl, H_DATE, &val, hist_tbl.cols[H_DATE].len));
+        double amount = 10.0;
+        ASSERT(ib_col_set_value(tpl, H_AMOUNT, &amount, hist_tbl.cols[H_AMOUNT].len));
+        // t_history->set_row_value_int(data, H_C_ID, c_id);
+        // t_history->set_row_value_int(data, H_C_D_ID, d_id);
+        // t_history->set_row_value_int(data, H_C_W_ID, w_id);
+        // t_history->set_row_value_int(data, H_D_ID, d_id);
+        // t_history->set_row_value_int(data, H_W_ID, w_id);
+        // t_history->set_row_value_int(data, H_DATE, 0);
+        // t_history->set_row_value_double(data, H_AMOUNT, 10.0);
+
+        ASSERT(ib_cursor_insert_row(crsr, tpl));
+        tpl = ib_tuple_clear(tpl);
+        ASSERT(err);
+    }
+    if (wh_id == num_wh && dist_id == TPCCConfig::g_dist_per_ware && cust_id == TPCCConfig::g_cust_per_dist)
+    {
+        printf("History table:\n");
+        err = do_query(crsr);
+        ASSERT(err);
+    }
+
+    // printf("Close cursor\n");
+    err = ib_cursor_close(crsr);
+    ASSERT(err);
+    crsr = NULL;
+
+    // printf("Commit transaction\n");
+    err = ib_trx_commit(ib_trx);
+    ASSERT(err);
     printf("History table %ld-%ld-%ld initialization committed.\n\n", wh_id, dist_id, cust_id);
     return DB_SUCCESS;
 }
