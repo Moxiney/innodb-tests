@@ -19,7 +19,7 @@ class TPCCConfig {
      * */
     // TODO: 暂时调小测试正确性
     const static int g_dist_per_ware = 10; // 每个仓库给几个地区供货
-    const static int g_cust_per_dist = 4; // 每个地区客户数量
+    const static int g_cust_per_dist = 5; // 每个地区客户数量
     const static int g_max_items = 10;    // 供应的商品种类
 
     const static int firstname_minlen = 8;
@@ -65,6 +65,8 @@ private:
     ib_err_t init_cust_data(ib_ulint_t wh_id, ib_ulint_t dist_id);
     ib_err_t init_order_data(ib_ulint_t wh_id, ib_ulint_t dist_id);
     ib_err_t init_hist_data(ib_ulint_t wh_id, ib_ulint_t dist_id, ib_ulint_t cust_id);
+
+    void init_permutation(ib_ulint_t *perm_c_id, ib_ulint_t wh_id);
 };
 
 ib_err_t tpcc_run_txn(tpcc_db_t tpcc_db);

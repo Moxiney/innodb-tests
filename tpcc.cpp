@@ -122,11 +122,11 @@ ib_err_t tpcc_db_t::init_tables_data()
             init_cust_data(wh_id, dist_id);
             // wl->init_tab_order(did, wid);
             init_order_data(wh_id, dist_id);
-            for (uint64_t cust_id = 1; cust_id <= TPCCConfig::g_cust_per_dist; cust_id++) {
+            for (uint64_t cust_id = 1; cust_id <= TPCCConfig::g_cust_per_dist; cust_id++)
+            {
                 //wl->init_tab_hist(cid, did, wid);
                 // init_hist_data(wh_id, dist_id, cust_id);
             }
-                
         }
     }
     return err;
@@ -308,7 +308,7 @@ ib_err_t tpcc_db_t::init_dist_data(ib_ulint_t wh_id)
     ib_trx = ib_trx_begin(IB_TRX_REPEATABLE_READ);
     assert(ib_trx != NULL);
 
-    printf("Open cursor of %s\n", dist_tbl.name);
+    //printf("Open cursor of %s\n", dist_tbl.name);
     err = open_table(dbname, dist_tbl.name, ib_trx, &crsr);
     ASSERT(err);
 
@@ -380,7 +380,7 @@ ib_err_t tpcc_db_t::init_stock_data(ib_ulint_t wh_id)
     ib_trx = ib_trx_begin(IB_TRX_REPEATABLE_READ);
     assert(ib_trx != NULL);
 
-    printf("Open cursor of %s\n", stock_tbl.name);
+    //printf("Open cursor of %s\n", stock_tbl.name);
     err = open_table(dbname, stock_tbl.name, ib_trx, &crsr);
     ASSERT(err);
 
@@ -397,7 +397,7 @@ ib_err_t tpcc_db_t::init_stock_data(ib_ulint_t wh_id)
         std::string field;
         ASSERT(ib_col_set_value(tpl, S_I_ID, &s_id, stock_tbl.cols[S_I_ID].len));
         ASSERT(ib_col_set_value(tpl, S_W_ID, &wh_id, stock_tbl.cols[S_W_ID].len));
-        auto val = URand(10, 100, wh_id-1);
+        auto val = URand(10, 100, wh_id - 1);
         ASSERT(ib_col_set_value(tpl, S_QUANTITY, &val, stock_tbl.cols[S_QUANTITY].len));
         const ib_ulint_t cnt = 0;
         ASSERT(ib_col_set_value(tpl, S_REMOTE_CNT, &cnt, stock_tbl.cols[S_REMOTE_CNT].len));
@@ -425,7 +425,7 @@ ib_err_t tpcc_db_t::init_stock_data(ib_ulint_t wh_id)
 ib_err_t tpcc_db_t::init_cust_data(ib_ulint_t wh_id, ib_ulint_t dist_id)
 {
     // To do
-    printf("Customer table %ld-%ld initialization began.\n", wh_id,dist_id);
+    printf("Customer table %ld-%ld initialization began.\n", wh_id, dist_id);
     ib_err_t err;
     ib_crsr_t crsr;
     ib_trx_t ib_trx;
@@ -434,7 +434,7 @@ ib_err_t tpcc_db_t::init_cust_data(ib_ulint_t wh_id, ib_ulint_t dist_id)
     ib_trx = ib_trx_begin(IB_TRX_REPEATABLE_READ);
     assert(ib_trx != NULL);
 
-    printf("Open cursor of %s\n", cust_tbl.name);
+    //printf("Open cursor of %s\n", cust_tbl.name);
     err = open_table(dbname, cust_tbl.name, ib_trx, &crsr);
     ASSERT(err);
 
@@ -450,7 +450,7 @@ ib_err_t tpcc_db_t::init_cust_data(ib_ulint_t wh_id, ib_ulint_t dist_id)
     {
         std::string field;
         std::string c_last;
-        
+
         ASSERT(ib_col_set_value(tpl, C_ID, &cust_id, cust_tbl.cols[C_ID].len));
         ASSERT(ib_col_set_value(tpl, C_D_ID, &dist_id, cust_tbl.cols[C_D_ID].len));
         ASSERT(ib_col_set_value(tpl, C_W_ID, &wh_id, cust_tbl.cols[C_W_ID].len));
@@ -458,7 +458,7 @@ ib_err_t tpcc_db_t::init_cust_data(ib_ulint_t wh_id, ib_ulint_t dist_id)
         field = "OE";
         ASSERT(ib_col_set_value(tpl, C_MIDDLE, field.c_str(), field.size()));
         c_last = cust_id < 1000 ? Lastname(cust_id - 1)
-                                : Lastname(NURand(255, 0, 999, wh_id-1));
+                                : Lastname(NURand(255, 0, 999, wh_id - 1));
         ASSERT(ib_col_set_value(tpl, C_LAST, c_last.c_str(), c_last.size()));
 
         field = MakeAlphaString(2, 2, wh_id - 1);
@@ -466,14 +466,14 @@ ib_err_t tpcc_db_t::init_cust_data(ib_ulint_t wh_id, ib_ulint_t dist_id)
 
         field = Rand(10, wh_id - 1) == 0 ? "GC" : "BC";
         ASSERT(ib_col_set_value(tpl, C_CREDIT, field.c_str(), field.size()));
-        
-        double  discnt = (double) Rand(5000, wh_id-1) / 10000;
+
+        double discnt = (double)Rand(5000, wh_id - 1) / 10000;
         ASSERT(ib_col_set_value(tpl, C_DISCOUNT, &discnt, cust_tbl.cols[C_DISCOUNT].len));
-        
+
         double balance = -10.0;
         ASSERT(ib_col_set_value(tpl, C_BALANCE, &balance, cust_tbl.cols[C_BALANCE].len));
         // t_customer->set_row_value_double(data, C_BALANCE, -10.0);
-        
+
         double ytd_payment = 10.0;
         ASSERT(ib_col_set_value(tpl, C_YTD_PAYMENT, &ytd_payment, cust_tbl.cols[C_YTD_PAYMENT].len));
         // t_customer->set_row_value_double(data, C_YTD_PAYMENT, 10.0);
@@ -487,8 +487,12 @@ ib_err_t tpcc_db_t::init_cust_data(ib_ulint_t wh_id, ib_ulint_t dist_id)
         tpl = ib_tuple_clear(tpl);
         ASSERT(err);
     }
-    err = do_query(crsr);
-    ASSERT(err);
+    if (wh_id == num_wh && dist_id == TPCCConfig::g_dist_per_ware)
+    {
+        printf("Customer table:\n");
+        err = do_query(crsr);
+        ASSERT(err);
+    }
 
     // printf("Close cursor\n");
     err = ib_cursor_close(crsr);
@@ -498,23 +502,162 @@ ib_err_t tpcc_db_t::init_cust_data(ib_ulint_t wh_id, ib_ulint_t dist_id)
     // printf("Commit transaction\n");
     err = ib_trx_commit(ib_trx);
     ASSERT(err);
-    printf("Customer table %ld-%ld initialization committed.\n\n", wh_id,dist_id);
+    printf("Customer table %ld-%ld initialization committed.\n\n", wh_id, dist_id);
     return DB_SUCCESS;
 }
 
 ib_err_t tpcc_db_t::init_order_data(ib_ulint_t wh_id, ib_ulint_t dist_id)
 {
-    printf("Order table %ld-%ld initialization began.\n", wh_id,dist_id);
-    printf("Order table %ld-%ld initialization committed.\n\n", wh_id,dist_id);
+    printf("Order table %ld-%ld initialization began.\n", wh_id, dist_id);
+    ib_err_t err;
+    ib_crsr_t order_crsr, ol_crsr, no_crsr;
+    ib_trx_t ib_trx;
+    auto order_tbl = tbls[order];
+    auto ol_tbl = tbls[order_line];
+    auto no_tbl = tbls[new_order];
+
+    ib_ulint_t perm[TPCCConfig::g_cust_per_dist];
+    init_permutation(perm, wh_id);
+
+    ib_trx = ib_trx_begin(IB_TRX_REPEATABLE_READ);
+    assert(ib_trx != NULL);
+
+    //printf("Open cursor of %s\n", order_tbl.name);
+    ASSERT(open_table(dbname, order_tbl.name, ib_trx, &order_crsr));
+
+    //printf("Open cursor of %s\n", ol_tbl.name);
+    ASSERT(open_table(dbname, ol_tbl.name, ib_trx, &ol_crsr));
+
+    //printf("Open cursor of %s\n", no_tbl.name);
+    ASSERT(open_table(dbname, no_tbl.name, ib_trx, &no_crsr));
+
+    //printf("Lock table in IX\n");
+    ASSERT(ib_cursor_lock(order_crsr, IB_LOCK_IX));
+    ASSERT(ib_cursor_lock(ol_crsr, IB_LOCK_IX));
+    ASSERT(ib_cursor_lock(no_crsr, IB_LOCK_IX));
+
+    auto order_tpl = ib_clust_read_tuple_create(order_crsr);
+    auto ol_tpl = ib_clust_read_tuple_create(ol_crsr);
+    auto no_tpl = ib_clust_read_tuple_create(no_crsr);
+
+    // modified tuple and insert
+
+    for (ib_ulint_t o_id = 1; o_id <= TPCCConfig::g_cust_per_dist; o_id++)
+    {
+        std::string field;
+        ib_ulint_t cust_id = perm[o_id - 1];
+
+        // Insert order table
+
+        ASSERT(ib_col_set_value(order_tpl, O_ID, &o_id, order_tbl.cols[O_ID].len));
+        ASSERT(ib_col_set_value(order_tpl, O_C_ID, &cust_id, order_tbl.cols[O_C_ID].len));
+        ASSERT(ib_col_set_value(order_tpl, O_D_ID, &dist_id, order_tbl.cols[O_D_ID].len));
+        ASSERT(ib_col_set_value(order_tpl, O_W_ID, &wh_id, order_tbl.cols[O_D_ID].len));
+
+        ib_ulint_t o_entry = 2019;
+        ASSERT(ib_col_set_value(order_tpl, O_ENTRY_D, &o_entry, order_tbl.cols[O_ENTRY_D].len));
+        ib_ulint_t carrier_id = o_id < 2101 ? URand(1, 10, wh_id - 1) : 0;
+        ASSERT(ib_col_set_value(order_tpl, O_CARRIER_ID, &carrier_id, order_tbl.cols[O_CARRIER_ID].len));
+        ib_ulint_t o_ol_cnt = URand(5, 15, wh_id - 1);
+        ASSERT(ib_col_set_value(order_tpl, O_OL_CNT, &o_ol_cnt, order_tbl.cols[O_OL_CNT].len));
+        ib_ulint_t val = 1;
+        ASSERT(ib_col_set_value(order_tpl, O_ALL_LOCAL, &val, order_tbl.cols[O_ALL_LOCAL].len));
+
+        err = ib_cursor_insert_row(order_crsr, order_tpl);
+        ASSERT(err);
+        order_tpl = ib_tuple_clear(order_tpl);
+        ASSERT(err);
+
+        // Insert order_line table
+        for (ib_ulint_t ol = 1; ol <= o_ol_cnt; ol++)
+        {
+            ASSERT(ib_col_set_value(ol_tpl, OL_O_ID, &o_id, ol_tbl.cols[OL_O_ID].len));
+            ASSERT(ib_col_set_value(ol_tpl, OL_D_ID, &dist_id, ol_tbl.cols[OL_D_ID].len));
+            ASSERT(ib_col_set_value(ol_tpl, OL_W_ID, &wh_id, ol_tbl.cols[OL_W_ID].len));
+            ASSERT(ib_col_set_value(ol_tpl, OL_NUMBER, &ol, ol_tbl.cols[OL_NUMBER].len));
+            ib_ulint_t i_id = URand(1, TPCCConfig::g_max_items, wh_id - 1);
+            ASSERT(ib_col_set_value(ol_tpl, OL_I_ID, &i_id, ol_tbl.cols[OL_I_ID].len));
+            // t_orderline->set_row_value_int(ol_data, OL_O_ID, oid);
+            // t_orderline->set_row_value_int(ol_data, OL_D_ID, d_id);
+            // t_orderline->set_row_value_int(ol_data, OL_W_ID, w_id);
+            // t_orderline->set_row_value_int(ol_data, OL_NUMBER, ol);
+            // t_orderline->set_row_value_int(ol_data, OL_I_ID,
+            //                                URand(1, 100000, w_id - 1));
+            err = ib_cursor_insert_row(ol_crsr, ol_tpl);
+            ASSERT(err);
+            ol_tpl = ib_tuple_clear(ol_tpl);
+            ASSERT(err);
+        }
+
+        // Insert new_order table
+        if (o_id >= 0.7 * TPCCConfig::g_cust_per_dist)
+        {
+            ASSERT(ib_col_set_value(no_tpl, NO_O_ID, &o_id, ol_tbl.cols[NO_O_ID].len));
+            ASSERT(ib_col_set_value(no_tpl, NO_D_ID, &dist_id, ol_tbl.cols[NO_D_ID].len));
+            ASSERT(ib_col_set_value(no_tpl, NO_W_ID, &wh_id, ol_tbl.cols[NO_W_ID].len));
+            // t_neworder->set_row_value_int(no_data, NO_O_ID, oid);
+            // t_neworder->set_row_value_int(no_data, NO_D_ID, d_id);
+            // t_neworder->set_row_value_int(no_data, NO_W_ID, w_id);
+
+            err = ib_cursor_insert_row(no_crsr, no_tpl);
+            ASSERT(err);
+            no_tpl = ib_tuple_clear(no_tpl);
+            ASSERT(err);
+        }
+    }
+
+    if (wh_id == num_wh && dist_id == TPCCConfig::g_dist_per_ware)
+    {
+        printf("Order table: \n");
+        err = do_query(order_crsr);
+        ASSERT(err);
+        printf("Order_line table: \n");
+        err = do_query(ol_crsr);
+        ASSERT(err);
+        printf("New order table: \n");
+        err = do_query(no_crsr);
+    }
+
+    // printf("Close cursor\n");
+    // Close all crsr
+    ASSERT(ib_cursor_close(order_crsr));
+    order_crsr = NULL;
+
+    ASSERT(ib_cursor_close(ol_crsr));
+    ol_crsr = NULL;
+
+    ASSERT(ib_cursor_close(no_crsr));
+    ol_crsr = NULL;
+
+    // printf("Commit transaction\n");
+    err = ib_trx_commit(ib_trx);
+    ASSERT(err);
+
+    printf("Order table %ld-%ld initialization committed.\n\n", wh_id, dist_id);
     return DB_SUCCESS;
 }
-
 
 ib_err_t tpcc_db_t::init_hist_data(ib_ulint_t wh_id, ib_ulint_t dist_id, ib_ulint_t cust_id)
 {
     // To do
-    printf("History table %ld-%ld-%ld initialization began.\n", wh_id,dist_id,cust_id);
-    printf("History table %ld-%ld-%ld initialization committed.\n\n", wh_id,dist_id,cust_id);
+    printf("History table %ld-%ld-%ld initialization began.\n", wh_id, dist_id, cust_id);
+    printf("History table %ld-%ld-%ld initialization committed.\n\n", wh_id, dist_id, cust_id);
     return DB_SUCCESS;
 }
 
+void tpcc_db_t::init_permutation(ib_ulint_t *perm_c_id, ib_ulint_t wh_id)
+{
+    uint32_t i;
+    // Init with consecutive values
+    for (i = 0; i < TPCCConfig::g_cust_per_dist; i++)
+        perm_c_id[i] = i + 1;
+
+    // shuffle
+    for (i = 0; i < TPCCConfig::g_cust_per_dist - 1; i++)
+    {
+        uint64_t j = URand(i + 1, TPCCConfig::g_cust_per_dist - 1, wh_id - 1);
+        uint64_t tmp = perm_c_id[i];
+        perm_c_id[i] = perm_c_id[j];
+        perm_c_id[j] = tmp;
+    }
+}
