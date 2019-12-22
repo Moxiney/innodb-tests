@@ -38,6 +38,10 @@ struct ib_col_t {
     ib_ulint_t len;
 };
 
+struct ib_idx_t {
+    const char * name;
+    std::vector<ib_col_t> cols;
+};
 
 struct ib_tbl_t {
     const char* name;

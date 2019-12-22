@@ -4,6 +4,10 @@
 #include <assert.h>
 #include <mm_malloc.h>
 
+int min(int a, int b) {
+    return a < b? a: b;
+} 
+
 void tpcc_query::init(uint64_t thd_id) {
     int x = rand() % 100;
     if (x < TPCCConfig::g_perc_neworder)

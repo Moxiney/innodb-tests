@@ -1,5 +1,5 @@
 #include "tpcc.h"
-#include "tpcc-query.h"
+
 #include <iostream>
 #include <memory>
 
@@ -28,6 +28,8 @@ ib_err_t tpcc_run_txn(tpcc_db_t db, int thd_id, int &num, Barrier *barrier)
 ib_err_t run_payment(tpcc_query *query) {
     // To do
     printf("wid :%ld, did: %ld, cid :%ld \n", query->w_id, query->d_id, query->c_id);
+    printf("dwid :%ld, cwid: %ld, cdid :%ld, clast: %s \n", query->d_w_id, query->c_w_id, query->c_d_id, query->c_last.c_str());
+    printf("hamout :%f, by_last %d \n", query->h_amount, query->by_last_name);
     return DB_SUCCESS;
 }
 
