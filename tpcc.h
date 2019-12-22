@@ -45,9 +45,8 @@ struct ib_idx_t {
 
 struct ib_tbl_t {
     const char* name;
-    const char* idx_name;
     std::vector<ib_col_t> cols;
-    std::vector<ib_col_t> idx_cols;
+    std::vector<ib_idx_t> idxs;
     ib_err_t create_table(const char* dbname);
     ib_err_t drop_table(const char* dbname);
 };

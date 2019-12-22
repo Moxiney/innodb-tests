@@ -41,23 +41,40 @@ ib_err_t ib_tbl_t::create_table(const char *dbname)
     }
 
     // printf("Creating %s: index %s\n", table_name, idx_name);
-    if (idx_cols.size() > 0)
+    for (auto idx : idxs)
     {
-        // If index is not empty.
-        err = ib_table_schema_add_index(ib_tbl_sch, idx_name, &ib_idx_sch);
+        err = ib_table_schema_add_index(ib_tbl_sch, idx.name, &ib_idx_sch);
         ASSERT(err);
 
         /* Add cols to index schema and Set prefix length to 0. */
-        for (auto idx_col : idx_cols)
+        for (auto idx_col : idx.cols)
         {
             err = ib_index_schema_add_col(ib_idx_sch, idx_col.name, 0);
             ASSERT(err);
-            // printf("Add index column %s\n", idx_col.name);
         }
 
         err = ib_index_schema_set_clustered(ib_idx_sch);
         ASSERT(err);
+        printf("Add index  %s\n", idx.name);
     }
+
+    // if (idx_cols.size() > 0)
+    // {
+    //     // If index is not empty.
+    //     err = ib_table_schema_add_index(ib_tbl_sch, idx_name, &ib_idx_sch);
+    //     ASSERT(err);
+
+    //     /* Add cols to index schema and Set prefix length to 0. */
+    //     for (auto idx_col : idx_cols)
+    //     {
+    //         err = ib_index_schema_add_col(ib_idx_sch, idx_col.name, 0);
+    //         ASSERT(err);
+    //         // printf("Add index column %s\n", idx_col.name);
+    //     }
+
+    //     err = ib_index_schema_set_clustered(ib_idx_sch);
+    //     ASSERT(err);
+    // }
 
     /* create table */
     ib_trx = ib_trx_begin(IB_TRX_REPEATABLE_READ);
@@ -146,7 +163,6 @@ ib_err_t tpcc_db_t::shutdown()
 ib_err_t tpcc_db_t::init_item_data()
 {
     // To do: create a transaction to insert tuple
-    printf("Item table initialization began.\n");
     ib_err_t err;
     ib_crsr_t crsr;
     ib_trx_t ib_trx;
@@ -196,7 +212,7 @@ ib_err_t tpcc_db_t::init_item_data()
         ASSERT(err);
     }
 
-    // printf("Query table\n");
+    printf("Item table initialization completed\n");
     err = do_query(crsr);
     ASSERT(err);
     ;
@@ -209,7 +225,6 @@ ib_err_t tpcc_db_t::init_item_data()
     // printf("Commit transaction\n");
     err = ib_trx_commit(ib_trx);
     ASSERT(err);
-    printf("Item table initialization committed\n");
 
     return DB_SUCCESS;
 }
@@ -217,7 +232,6 @@ ib_err_t tpcc_db_t::init_item_data()
 ib_err_t tpcc_db_t::init_wh_data(ib_ulint_t wh_id)
 {
     // To do
-    printf("Warehouse table  %ld initialization began.\n", wh_id);
 
     ib_err_t err;
     ib_crsr_t crsr;
@@ -281,8 +295,12 @@ ib_err_t tpcc_db_t::init_wh_data(ib_ulint_t wh_id)
     ASSERT(err);
 
     // Print all tuples
-    err = do_query(crsr);
-    ASSERT(err);
+    if (wh_id == num_wh)
+    {
+        printf("Warehouse table initialization completed.\n");
+        err = do_query(crsr);
+        ASSERT(err);
+    }
 
     // printf("Close cursor\n");
     err = ib_cursor_close(crsr);
@@ -292,14 +310,13 @@ ib_err_t tpcc_db_t::init_wh_data(ib_ulint_t wh_id)
     // printf("Commit transaction\n");
     err = ib_trx_commit(ib_trx);
     ASSERT(err);
-    printf("Warehouse table %ld initialization committed.\n\n", wh_id);
+
     return DB_SUCCESS;
 }
 
 ib_err_t tpcc_db_t::init_dist_data(ib_ulint_t wh_id)
 {
     // To do
-    printf("District table %ld initialization began.\n", wh_id);
 
     ib_err_t err;
     ib_crsr_t crsr;
@@ -353,8 +370,12 @@ ib_err_t tpcc_db_t::init_dist_data(ib_ulint_t wh_id)
         tpl = ib_tuple_clear(tpl);
         ASSERT(err);
     }
-    err = do_query(crsr);
-    ASSERT(err);
+    if (wh_id == num_wh)
+    {
+        printf("District table initialization committed.\n");
+        err = do_query(crsr);
+        ASSERT(err);
+    }
 
     // printf("Close cursor\n");
     err = ib_cursor_close(crsr);
@@ -364,14 +385,13 @@ ib_err_t tpcc_db_t::init_dist_data(ib_ulint_t wh_id)
     // printf("Commit transaction\n");
     err = ib_trx_commit(ib_trx);
     ASSERT(err);
-    printf("District table %ld initialization committed.\n\n", wh_id);
+
     return DB_SUCCESS;
 }
 
 ib_err_t tpcc_db_t::init_stock_data(ib_ulint_t wh_id)
 {
     // To do
-    printf("Stock table %ld initialization began.\n", wh_id);
 
     ib_err_t err;
     ib_crsr_t crsr;
@@ -408,8 +428,12 @@ ib_err_t tpcc_db_t::init_stock_data(ib_ulint_t wh_id)
         tpl = ib_tuple_clear(tpl);
         ASSERT(err);
     }
-    err = do_query(crsr);
-    ASSERT(err);
+    if (wh_id == num_wh)
+    {
+        printf("Stock table initialization completed.\n");
+        err = do_query(crsr);
+        ASSERT(err);
+    }
 
     // printf("Close cursor\n");
     err = ib_cursor_close(crsr);
@@ -419,14 +443,14 @@ ib_err_t tpcc_db_t::init_stock_data(ib_ulint_t wh_id)
     // printf("Commit transaction\n");
     err = ib_trx_commit(ib_trx);
     ASSERT(err);
-    printf("Stock table %ld initialization committed.\n\n", wh_id);
+
     return DB_SUCCESS;
 }
 
 ib_err_t tpcc_db_t::init_cust_data(ib_ulint_t wh_id, ib_ulint_t dist_id)
 {
     // To do
-    printf("Customer table %ld-%ld initialization began.\n", wh_id, dist_id);
+    //printf("Customer table %ld-%ld initialization began.\n", wh_id, dist_id);
     ib_err_t err;
     ib_crsr_t crsr;
     ib_trx_t ib_trx;
@@ -503,13 +527,13 @@ ib_err_t tpcc_db_t::init_cust_data(ib_ulint_t wh_id, ib_ulint_t dist_id)
     // printf("Commit transaction\n");
     err = ib_trx_commit(ib_trx);
     ASSERT(err);
-    printf("Customer table %ld-%ld initialization committed.\n\n", wh_id, dist_id);
+    //printf("Customer table %ld-%ld initialization committed.\n\n", wh_id, dist_id);
     return DB_SUCCESS;
 }
 
 ib_err_t tpcc_db_t::init_order_data(ib_ulint_t wh_id, ib_ulint_t dist_id)
 {
-    printf("Order table %ld-%ld initialization began.\n", wh_id, dist_id);
+    //printf("Order table %ld-%ld initialization began.\n", wh_id, dist_id);
     ib_err_t err;
     ib_crsr_t order_crsr, ol_crsr, no_crsr;
     ib_trx_t ib_trx;
@@ -634,14 +658,14 @@ ib_err_t tpcc_db_t::init_order_data(ib_ulint_t wh_id, ib_ulint_t dist_id)
     err = ib_trx_commit(ib_trx);
     ASSERT(err);
 
-    printf("Order table %ld-%ld initialization committed.\n\n", wh_id, dist_id);
+    //printf("Order table %ld-%ld initialization committed.\n\n", wh_id, dist_id);
     return DB_SUCCESS;
 }
 
 ib_err_t tpcc_db_t::init_hist_data(ib_ulint_t wh_id, ib_ulint_t dist_id, ib_ulint_t cust_id)
 {
     // To do
-    printf("History table %ld-%ld-%ld initialization began.\n", wh_id, dist_id, cust_id);
+    //printf("History table %ld-%ld-%ld initialization began.\n", wh_id, dist_id, cust_id);
     ib_err_t err;
     ib_crsr_t crsr;
     ib_trx_t ib_trx;
@@ -700,7 +724,7 @@ ib_err_t tpcc_db_t::init_hist_data(ib_ulint_t wh_id, ib_ulint_t dist_id, ib_ulin
     // printf("Commit transaction\n");
     err = ib_trx_commit(ib_trx);
     ASSERT(err);
-    printf("History table %ld-%ld-%ld initialization committed.\n\n", wh_id, dist_id, cust_id);
+    //printf("History table %ld-%ld-%ld initialization committed.\n\n", wh_id, dist_id, cust_id);
     return DB_SUCCESS;
 }
 

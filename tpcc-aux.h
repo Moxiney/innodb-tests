@@ -3,7 +3,7 @@
 
 const ib_tbl_t WAREHOUSE = {
     "WAREHOUSE",
-    "W_INDEX",
+
     {
         {"W_ID", IB_INT, 8},
         {"W_NAME", IB_VARCHAR, 10},
@@ -15,11 +15,12 @@ const ib_tbl_t WAREHOUSE = {
         {"W_TAX", IB_DOUBLE, 8},
         {"W_YTD", IB_DOUBLE, 8},
     },
-    {{"W_ID", IB_INT, 8}}};
+    {{"W_INDEX",
+      {{"W_ID", IB_INT, 8}}}}};
 
 const ib_tbl_t DISTRICT = {
     "DISTRICT",
-    "D_INDEX",
+
     {{"D_ID", IB_INT, 8},
      {"D_W_ID", IB_INT, 8},
      {"D_NAME", IB_VARCHAR, 10},
@@ -31,12 +32,12 @@ const ib_tbl_t DISTRICT = {
      {"D_TAX", IB_DOUBLE, 8},
      {"D_YTD", IB_DOUBLE, 8},
      {"D_NEXT_O_ID", IB_INT, 8}},
-    {{"D_ID", IB_INT, 8},
-     {"D_W_ID", IB_INT, 8}}};
+    {{"D_INDEX",
+      {{"D_ID", IB_INT, 8},
+       {"D_W_ID", IB_INT, 8}}}}};
 
 const ib_tbl_t CUSTOMER = {
     "CUSTOMER",
-    "C_INDEX",
     {{"C_ID", IB_INT, 8},
      {"C_D_ID", IB_INT, 8},
      {"C_W_ID", IB_INT, 8},
@@ -58,13 +59,17 @@ const ib_tbl_t CUSTOMER = {
      {"C_PAYMENT_CNT", IB_INT, 8},
      {"C_DELIVERY_CNT", IB_INT, 8},
      {"C_DATA", IB_VARCHAR, 500}},
-    {{"C_ID", IB_INT, 8},
-     {"C_D_ID", IB_INT, 8},
-     {"C_W_ID", IB_INT, 8}}};
+    {{"C_INDEX",
+      {{"C_ID", IB_INT, 8},
+       {"C_D_ID", IB_INT, 8},
+       {"C_W_ID", IB_INT, 8}}},
+     {"C_LAST_INDEX",
+      {{"C_LAST", IB_VARCHAR, 16},
+       {"C_D_ID", IB_INT, 8},
+       {"C_W_ID", IB_INT, 8}}}}};
 
 const ib_tbl_t HISTORY = {
     "HISTORY",
-    "H_INDEX",
     {{"H_C_ID", IB_INT, 8},
      {"H_C_D_ID", IB_INT, 8},
      {"H_C_W_ID", IB_INT, 8},
@@ -77,17 +82,18 @@ const ib_tbl_t HISTORY = {
 
 const ib_tbl_t NEW_ORDER = {
     "NEW_ORDER",
-    "NO_INDEX",
+
     {{"NO_O_ID", IB_INT, 8},
      {"NO_D_ID", IB_INT, 8},
      {"NO_W_ID", IB_INT, 8}},
-    {{"NO_O_ID", IB_INT, 8},
-     {"NO_D_ID", IB_INT, 8},
-     {"NO_W_ID", IB_INT, 8}}};
+    {{"NO_INDEX",
+      {{"NO_O_ID", IB_INT, 8},
+       {"NO_D_ID", IB_INT, 8},
+       {"NO_W_ID", IB_INT, 8}}}}};
 
 const ib_tbl_t ORDER = {
     "ORDER",
-    "O_INDEX",
+
     {{"O_ID", IB_INT, 8},
      {"O_C_ID", IB_INT, 8},
      {"O_D_ID", IB_INT, 8},
@@ -96,13 +102,14 @@ const ib_tbl_t ORDER = {
      {"O_CARRIER_ID", IB_INT, 8},
      {"O_OL_CNT", IB_INT, 8},
      {"O_ALL_LOCAL", IB_INT, 8}},
-    {{"O_ID", IB_INT, 8},
-     {"O_W_ID", IB_INT, 8},
-     {"O_D_ID", IB_INT, 8}}};
+    {{"O_INDEX",
+      {{"O_ID", IB_INT, 8},
+       {"O_W_ID", IB_INT, 8},
+       {"O_D_ID", IB_INT, 8}}}}};
 
 const ib_tbl_t ORDER_LINE = {
     "ORDER_LINE",
-    "OL_INDEX",
+
     {{"OL_O_ID", IB_INT, 8},
      {"OL_D_ID", IB_INT, 8},
      {"OL_W_ID", IB_INT, 8},
@@ -113,24 +120,26 @@ const ib_tbl_t ORDER_LINE = {
      {"OL_QUANTITY", IB_INT, 8},
      {"OL_AMOUNT", IB_DOUBLE, 8},
      {"OL_DIST_INFO", IB_INT, 8}},
-    {{"OL_O_ID", IB_INT, 8},
-     {"OL_D_ID", IB_INT, 8},
-     {"OL_W_ID", IB_INT, 8},
-     {"OL_NUMBER", IB_INT, 8}}};
+    {{"OL_INDEX",
+      {{"OL_O_ID", IB_INT, 8},
+       {"OL_D_ID", IB_INT, 8},
+       {"OL_W_ID", IB_INT, 8},
+       {"OL_NUMBER", IB_INT, 8}}}}};
 
 const ib_tbl_t ITEM = {
     "ITEM",
-    "I_INDEX",
+    
     {{"I_ID", IB_INT, 8},
      {"I_IM_ID", IB_INT, 8},
      {"I_NAME", IB_VARCHAR, 24},
      {"I_PRICE", IB_INT, 8},
      {"I_DATA", IB_VARCHAR, 50}},
-    {{"I_ID", IB_INT, 8}}};
+    {{"I_INDEX",
+    {{"I_ID", IB_INT, 8}}}}};
 
 const ib_tbl_t STOCK = {
     "STOCK",
-    "S_INDEX",
+    
     {{"S_I_ID", IB_INT, 8},
      {"S_W_ID", IB_INT, 8},
      {"S_QUANTITY", IB_INT, 8},
@@ -147,16 +156,17 @@ const ib_tbl_t STOCK = {
      {"S_YTD", IB_INT, 8},
      {"S_ORDER_CNT", IB_INT, 8},
      {"S_REMOTE_CNT", IB_INT, 8},
-     {"S_DATA", IB_VARCHAR, 50}
-     },
+     {"S_DATA", IB_VARCHAR, 50}},
+    {{"S_INDEX",
     {{"S_W_ID", IB_INT, 8},
-     {"S_I_ID", IB_INT, 8}}};
+     {"S_I_ID", IB_INT, 8}}}}};
 
 const tpcc_db_t tpcc_db = {
     "tpcc_db",
     {WAREHOUSE, DISTRICT, CUSTOMER, HISTORY, NEW_ORDER, ORDER, ORDER_LINE, ITEM, STOCK}};
 
-enum {
+enum
+{
     W_ID,
     W_NAME,
     W_STREET_1,
@@ -167,7 +177,8 @@ enum {
     W_TAX,
     W_YTD
 };
-enum {
+enum
+{
     D_ID,
     D_W_ID,
     D_NAME,
@@ -180,7 +191,8 @@ enum {
     D_YTD,
     D_NEXT_O_ID
 };
-enum {
+enum
+{
     C_ID,
     C_D_ID,
     C_W_ID,
@@ -203,9 +215,25 @@ enum {
     C_DELIVERY_CNT,
     C_DATA
 };
-enum { H_C_ID, H_C_D_ID, H_C_W_ID, H_D_ID, H_W_ID, H_DATE, H_AMOUNT, H_DATA };
-enum { NO_O_ID, NO_D_ID, NO_W_ID };
-enum {
+enum
+{
+    H_C_ID,
+    H_C_D_ID,
+    H_C_W_ID,
+    H_D_ID,
+    H_W_ID,
+    H_DATE,
+    H_AMOUNT,
+    H_DATA
+};
+enum
+{
+    NO_O_ID,
+    NO_D_ID,
+    NO_W_ID
+};
+enum
+{
     O_ID,
     O_C_ID,
     O_D_ID,
@@ -215,7 +243,8 @@ enum {
     O_OL_CNT,
     O_ALL_LOCAL
 };
-enum {
+enum
+{
     OL_O_ID,
     OL_D_ID,
     OL_W_ID,
@@ -227,8 +256,16 @@ enum {
     OL_AMOUNT,
     OL_DIST_INFO
 };
-enum { I_ID, I_IM_ID, I_NAME, I_PRICE, I_DATA };
-enum {
+enum
+{
+    I_ID,
+    I_IM_ID,
+    I_NAME,
+    I_PRICE,
+    I_DATA
+};
+enum
+{
     S_I_ID,
     S_W_ID,
     S_QUANTITY,
@@ -248,4 +285,15 @@ enum {
     S_DATA
 };
 
-enum {warehouse, district, customer, history, new_order, order, order_line, item, stock};
+enum
+{
+    warehouse,
+    district,
+    customer,
+    history,
+    new_order,
+    order,
+    order_line,
+    item,
+    stock
+};
