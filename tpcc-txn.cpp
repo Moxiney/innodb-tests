@@ -313,6 +313,26 @@ ib_err_t run_payment(tpcc_db_t *db, tpcc_query *query)
         ib_tuple_delete(new_tpl);
 
     }
+    close_all_crsrs();
+
+    /* 4. Insert into History*/
+    std::string h_data;
+    h_data += w_name;
+    int length = h_data.size();
+    if (length > 10)
+        length = 10;
+    h_data = h_data.substr(0, length);
+    h_data += "    ";
+    h_data += d_name;
+    h_data = h_data.substr(0, 24);
+
+    printf("Opening table history\n");
+    auto h_tbl = db->tbls[history];
+    ASSERT(open_table(db->dbname, h_tbl.name, ib_trx, &h_crsr));
+    ASSERT(ib_cursor_lock(h_crsr, IB_LOCK_IX));
+
+    auto h_tpl = ib_clust_read_tuple_create(h_crsr);
+        
 
     trx_commit();
     return DB_SUCCESS;
