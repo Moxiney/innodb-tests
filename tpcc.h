@@ -1,5 +1,7 @@
 #pragma once
 #include "/usr/local/include/embedded_innodb-1.0/innodb.h"
+#include "common.h"
+#include "tpcc-query.h"
 #include <vector>
 #include <assert.h>
 // 定义col, table等数据结构, 以及一些辅助函数.
@@ -70,6 +72,10 @@ private:
     void init_permutation(ib_ulint_t *perm_c_id, ib_ulint_t wh_id);
 };
 
-ib_err_t tpcc_run_txn(tpcc_db_t tpcc_db);
+ib_err_t tpcc_run_txn(tpcc_db_t db, int thd_id, int &num, Barrier *barrier);
+
+ib_err_t run_payment(tpcc_query *query);
+
+ib_err_t run_new_order(tpcc_query *query);
 
 

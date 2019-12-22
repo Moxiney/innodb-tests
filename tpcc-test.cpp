@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
 {
 	// To do: assign values
     // init_table_size = 100000;
-	num_wh = 3;
+	num_wh = 1;
 	int read_ratio = 50;
 	int thread_num = 10;
 	int duration = 10;
@@ -46,7 +46,9 @@ int main(int argc, char *argv[])
     };
     err = tpcc_db.init();
 
-	ASSERT(tpcc_run_txn(tpcc_db));
+	int num = 0;
+	auto barrier = std::make_unique<Barrier>(thread_num + 1);
+	ASSERT(tpcc_run_txn(tpcc_db, 0, num, barrier.get()));
 	// err = database_init(DATABASE);
 	// assert(err == DB_SUCCESS);
 

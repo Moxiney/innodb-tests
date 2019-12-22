@@ -10,7 +10,7 @@
 #include <getopt.h>
 
 static const char log_group_home_dir[] = "log";
-static const char data_file_path[] = "ibdata1:1G:autoextend";
+static const char data_file_path[] = "ibdata1:128M:autoextend";
 
 ib_err_t
 create_database(
