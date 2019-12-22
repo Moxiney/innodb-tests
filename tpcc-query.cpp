@@ -50,7 +50,8 @@ void tpcc_query::gen_payment(uint64_t thd_id) {
     if (y <= 60) {
         // by last name
         by_last_name = true;
-        c_last = Lastname(NURand(255, 0, 999, w_id - 1));
+        c_last = Lastname(NURand(255, 0, min(999, TPCCConfig::g_cust_per_dist), w_id - 1));
+        // c_last = Lastname(NURand(255, 0, 999, w_id - 1));
     } else {
         // by cust id
         by_last_name = false;
