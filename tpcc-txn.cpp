@@ -190,7 +190,7 @@ ib_err_t run_payment(tpcc_db_t *db, tpcc_query *query)
     }
     ib_tuple_delete(d_sec_key_tpl);
 
-    // 2.3 读写该行
+    // 3.3 读写该行
     // 读取D_NAME, 更新D_YTD
 
     std::string d_name;
@@ -230,8 +230,8 @@ ib_err_t run_payment(tpcc_db_t *db, tpcc_query *query)
     }
     close_all_crsrs();
 
-    /* 3. 读取Customer表格, c_id = _c_id, c_w_id = :w_id; */
-    // 3.1 打开customer表格以及customer idx表格并且上锁
+    /* 4. 读取Customer表格, c_id = _c_id, c_w_id = :w_id; */
+    // 4.1 打开customer表格以及customer idx表格并且上锁
     printf("Opening table customer\n");
     auto c_tbl = db->tbls[customer];
     auto idx_id = query->by_last_name ? 1 : 0;
@@ -239,24 +239,36 @@ ib_err_t run_payment(tpcc_db_t *db, tpcc_query *query)
 
     ASSERT(open_table(db->dbname, c_tbl.name, ib_trx, &c_crsr));
     ASSERT(ib_cursor_lock(c_crsr, IB_LOCK_IX));
+    printf("customer index name %s\n", c_idx.name);
     ASSERT(ib_cursor_open_index_using_name(c_crsr, c_idx.name, &c_idx_crsr));
     ASSERT(ib_cursor_set_lock_mode(c_idx_crsr, IB_LOCK_S));
-    ib_cursor_set_cluster_access(c_idx_crsr);
+    if (idx_id == 0)
+        ib_cursor_set_cluster_access(c_idx_crsr);
 
     // 3.2 移动c_crsr直到满足c_id = _c_id(c_last = _c_last), c_d_id = _c_d_id, c_w_id = _c_w_id
-    auto c_sec_key_tpl = ib_sec_search_tuple_create(c_idx_crsr);
-    assert(c_sec_key_tpl != NULL);
+    ib_tpl_t c_sec_key_tpl;
     if (query->by_last_name)
     {
-        ASSERT(ib_col_set_value(c_sec_key_tpl, 0, query->c_last.c_str(), query->c_last.size()));
+        c_sec_key_tpl = ib_sec_search_tuple_create(c_crsr);
+        ASSERT(ib_col_set_value(c_sec_key_tpl, C_LAST, query->c_last.c_str(), query->c_last.size()));
+        ASSERT(ib_col_set_value(c_sec_key_tpl, C_D_ID, &query->c_d_id, c_tbl.cols[C_D_ID].len));
+        ASSERT(ib_col_set_value(c_sec_key_tpl, C_W_ID, &query->c_w_id, c_tbl.cols[C_W_ID].len));
     }
     else
     {
+        c_sec_key_tpl = ib_sec_search_tuple_create(c_idx_crsr);
+        assert(c_sec_key_tpl != NULL);
         ASSERT(ib_col_set_value(c_sec_key_tpl, 0, &query->c_id, c_idx.cols[0].len));
+        ASSERT(ib_col_set_value(c_sec_key_tpl, 1, &query->c_d_id, c_idx.cols[1].len));
+        ASSERT(ib_col_set_value(c_sec_key_tpl, 2, &query->c_w_id, c_idx.cols[2].len));
     }
-    ASSERT(ib_col_set_value(c_sec_key_tpl, 1, &query->c_d_id, c_idx.cols[1].len));
-    ASSERT(ib_col_set_value(c_sec_key_tpl, 2, &query->c_w_id, c_idx.cols[2].len));
     print_tuple(stdout, c_sec_key_tpl);
+
+    auto ncols = ib_tuple_get_n_cols(c_sec_key_tpl);
+    if (ncols == 4)
+    {
+        printf("ncols %ld\n", ncols);
+    }
 
     err = ib_cursor_moveto(c_idx_crsr, c_sec_key_tpl, IB_CUR_GE, &res);
     if (err != DB_SUCCESS || res != 0)
@@ -265,7 +277,6 @@ ib_err_t run_payment(tpcc_db_t *db, tpcc_query *query)
         return err;
     }
     ib_tuple_delete(c_sec_key_tpl);
-
 
     std::string c_credit;
     if (res == 0)
@@ -287,8 +298,7 @@ ib_err_t run_payment(tpcc_db_t *db, tpcc_query *query)
 
         auto c_credit_cstr = ib_col_get_value(old_tpl, C_CREDIT);
         auto c_credit_len = ib_col_get_meta(old_tpl, C_CREDIT, &col_meta);
-        d_name.assign(static_cast<const char *>(c_credit_cstr), c_credit_len);
-        
+        c_credit.assign(static_cast<const char *>(c_credit_cstr), c_credit_len);
 
         c_balance -= query->h_amount;
         c_ytd_payment -= query->h_amount;
@@ -311,7 +321,6 @@ ib_err_t run_payment(tpcc_db_t *db, tpcc_query *query)
 
         ib_tuple_delete(old_tpl);
         ib_tuple_delete(new_tpl);
-
     }
     close_all_crsrs();
 
@@ -332,8 +341,22 @@ ib_err_t run_payment(tpcc_db_t *db, tpcc_query *query)
     ASSERT(ib_cursor_lock(h_crsr, IB_LOCK_IX));
 
     auto h_tpl = ib_clust_read_tuple_create(h_crsr);
-        
 
+    ASSERT(ib_col_set_value(h_tpl, H_C_ID, &query->c_id, h_tbl.cols[H_C_ID].len));
+    ASSERT(ib_col_set_value(h_tpl, H_C_W_ID, &query->c_w_id, h_tbl.cols[H_C_W_ID].len));
+    ASSERT(ib_col_set_value(h_tpl, H_D_ID, &query->d_id, h_tbl.cols[H_D_ID].len));
+    ASSERT(ib_col_set_value(h_tpl, H_W_ID, &query->w_id, h_tbl.cols[H_W_ID].len));
+    ib_ulint_t date = 2019;
+    ASSERT(ib_col_set_value(h_tpl, H_DATE, &date, h_tbl.cols[H_DATE].len));
+    ASSERT(ib_col_set_value(h_tpl, H_AMOUNT, &query->h_amount, h_tbl.cols[H_AMOUNT].len));
+    ASSERT(ib_col_set_value(h_tpl, H_DATA, h_data.c_str(), h_data.size()));
+
+    print_tuple(stdout, h_tpl);
+
+    ASSERT(ib_cursor_insert_row(h_crsr, h_tpl));
+    h_tpl = ib_tuple_clear(h_tpl);
+
+    // Commit
     trx_commit();
     return DB_SUCCESS;
 }

@@ -41,8 +41,10 @@ ib_err_t ib_tbl_t::create_table(const char *dbname)
     }
 
     // printf("Creating %s: index %s\n", table_name, idx_name);
-    for (auto idx : idxs)
+    //for (auto idx : idxs)
+    for (int i = 0; i < idxs.size(); i++)
     {
+        auto idx = idxs[i];
         err = ib_table_schema_add_index(ib_tbl_sch, idx.name, &ib_idx_sch);
         ASSERT(err);
 
@@ -51,10 +53,14 @@ ib_err_t ib_tbl_t::create_table(const char *dbname)
         {
             err = ib_index_schema_add_col(ib_idx_sch, idx_col.name, 0);
             ASSERT(err);
+            printf("Add index col  %s\n", idx_col.name);
         }
 
-        err = ib_index_schema_set_clustered(ib_idx_sch);
-        ASSERT(err);
+        if (i == 0)
+        {
+            err = ib_index_schema_set_clustered(ib_idx_sch);
+            ASSERT(err);
+        }
         printf("Add index  %s\n", idx.name);
     }
 

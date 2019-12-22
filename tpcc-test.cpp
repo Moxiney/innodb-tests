@@ -51,6 +51,7 @@ int main(int argc, char *argv[])
 	int num = 0;
 	auto barrier = std::make_unique<Barrier>(thread_num + 1);
 	ASSERT(tpcc_run_txn(&tpcc_db, 0, num, barrier.get()));
+	ASSERT(tpcc_run_txn(&tpcc_db, 0, num, barrier.get()));
 	// err = database_init(DATABASE);
 	// assert(err == DB_SUCCESS);
 
