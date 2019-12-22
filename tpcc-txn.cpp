@@ -259,16 +259,17 @@ ib_err_t run_payment(tpcc_db_t *db, tpcc_query *query)
     ASSERT(ib_col_set_value(c_sec_key_tpl, 2, &query->c_w_id, c_idx.cols[2].len));
     print_tuple(stdout, c_sec_key_tpl);
     
-    auto ncols = ib_tuple_get_n_cols(c_sec_key_tpl);
-    if (ncols == 4) {
-        printf("ncols %ld\n", ncols);
-    }
+    // auto ncols = ib_tuple_get_n_cols(c_sec_key_tpl);
+    // if (ncols == 4) {
+    //     printf("ncols %ld\n", ncols);
+    // }
     
     
 
     err = ib_cursor_moveto(c_idx_crsr, c_sec_key_tpl, IB_CUR_GE, &res);
     if (err != DB_SUCCESS || res != 0)
     {
+        printf("res %d\n", res);
         trx_abort();
         return err;
     }
