@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
 {
 	// To do: assign values
     // init_table_size = 100000;
-	int num_wh = 1;
+	num_wh = 3;
 	int read_ratio = 50;
 	int thread_num = 10;
 	int duration = 10;
@@ -46,6 +46,7 @@ int main(int argc, char *argv[])
     };
     err = tpcc_db.init();
 
+	ASSERT(tpcc_run_txn(tpcc_db));
 	// err = database_init(DATABASE);
 	// assert(err == DB_SUCCESS);
 

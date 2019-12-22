@@ -5,6 +5,7 @@
 // 定义col, table等数据结构, 以及一些辅助函数.
 
 extern int done;
+extern int num_wh;
 
 #define ASSERT(err) assert(err == DB_SUCCESS)
 

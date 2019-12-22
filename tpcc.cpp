@@ -5,6 +5,7 @@
 #include <assert.h>
 
 int done = 0;
+int num_wh = 1;
 
 ib_err_t ib_tbl_t::create_table(const char *dbname)
 {
