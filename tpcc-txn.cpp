@@ -3,6 +3,25 @@
 #include <iostream>
 #include <memory>
 
+ib_err_t open_tbl_and_idx(const char *dbname,  ib_trx_t &ib_trx, 
+    const char *tbl_name, ib_crsr_t &tbl_crsr, 
+    const char *idx_name, ib_crsr_t &idx_crsr) 
+{
+    ASSERT(open_table(dbname, tbl_name, ib_trx, &tbl_crsr));
+    ASSERT(ib_cursor_lock(tbl_crsr, IB_LOCK_IX));
+    ASSERT(ib_cursor_open_index_using_name(tbl_crsr, idx_name, &idx_crsr));
+    ASSERT(ib_cursor_set_lock_mode(idx_crsr, IB_LOCK_S));
+    ib_cursor_set_cluster_access(idx_crsr);
+    return DB_SUCCESS;
+}
+
+void tuple_delete(ib_tpl_t &tpl) {
+    tpl = ib_tuple_clear(tpl);
+    assert(tpl != NULL);
+    ib_tuple_delete(tpl);
+}
+
+
 ib_err_t tpcc_run_txn(tpcc_db_t *db, int thd_id, int &num, Barrier *barrier)
 {
     // To do:
@@ -11,7 +30,7 @@ ib_err_t tpcc_run_txn(tpcc_db_t *db, int thd_id, int &num, Barrier *barrier)
     auto query = std::make_unique<tpcc_query>();
 
     query->init(thd_id);
-    while (query->type != TPCC_PAYMENT)
+    while (query->type == TPCC_PAYMENT)
     {
         query->init(thd_id);
     }
@@ -103,11 +122,12 @@ ib_err_t run_payment(tpcc_db_t *db, tpcc_query *query)
     printf("Opening table warehouse\n");
     auto w_tbl = db->tbls[warehouse];
     auto w_idx = w_tbl.idxs[0];
-    ASSERT(open_table(db->dbname, w_tbl.name, ib_trx, &w_crsr));
-    ASSERT(ib_cursor_lock(w_crsr, IB_LOCK_IX));
-    ASSERT(ib_cursor_open_index_using_name(w_crsr, w_idx.name, &w_idx_crsr));
-    ASSERT(ib_cursor_set_lock_mode(w_idx_crsr, IB_LOCK_S));
-    ib_cursor_set_cluster_access(w_idx_crsr);
+    // ASSERT(open_table(db->dbname, w_tbl.name, ib_trx, &w_crsr));
+    // ASSERT(ib_cursor_lock(w_crsr, IB_LOCK_IX));
+    // ASSERT(ib_cursor_open_index_using_name(w_crsr, w_idx.name, &w_idx_crsr));
+    // ASSERT(ib_cursor_set_lock_mode(w_idx_crsr, IB_LOCK_S));
+    // ib_cursor_set_cluster_access(w_idx_crsr);
+    err = open_tbl_and_idx(db->dbname, ib_trx, w_tbl.name, w_crsr, w_idx.name, w_idx_crsr);
 
     // 2.2 移动w_crsr直到满足w_id = _w_id
     auto w_sec_key_tpl = ib_sec_search_tuple_create(w_idx_crsr);
@@ -151,14 +171,16 @@ ib_err_t run_payment(tpcc_db_t *db, tpcc_query *query)
         err = ib_cursor_update_row(w_idx_crsr, old_tpl, new_tpl);
         assert(err == DB_SUCCESS || err == DB_DUPLICATE_KEY);
 
-        old_tpl = ib_tuple_clear(old_tpl);
-        assert(old_tpl != NULL);
+        // old_tpl = ib_tuple_clear(old_tpl);
+        // assert(old_tpl != NULL);
 
-        new_tpl = ib_tuple_clear(new_tpl);
-        assert(new_tpl != NULL);
+        // new_tpl = ib_tuple_clear(new_tpl);
+        // assert(new_tpl != NULL);
 
-        ib_tuple_delete(old_tpl);
-        ib_tuple_delete(new_tpl);
+        // ib_tuple_delete(old_tpl);
+        // ib_tuple_delete(new_tpl);
+        tuple_delete(old_tpl);
+        tuple_delete(new_tpl);
     }
     // 2.4 关闭
     close_all_crsrs();
@@ -364,5 +386,113 @@ ib_err_t run_payment(tpcc_db_t *db, tpcc_query *query)
 ib_err_t run_new_order(tpcc_db_t *db, tpcc_query *query)
 {
     // To do
+    printf("wid :%ld, did: %ld, cid :%ld \n", query->w_id, query->d_id, query->c_id);
+    printf("ol_cnt %ld, remote %d\n", query->ol_cnt, query->remote);
+
+    // 变量定义
+    ib_trx_t ib_trx;
+    ib_err_t err;
+    ib_crsr_t w_crsr = NULL, d_crsr = NULL, c_crsr = NULL, o_crsr = NULL, no_crsr = NULL,
+        i_crsr = NULL, s_crsr = NULL, ol_crsr = NULL;
+    ib_crsr_t w_idx_crsr = NULL, d_idx_crsr = NULL, c_idx_crsr = NULL, o_idx_crsr = NULL, no_idx_crsr = NULL, 
+        i_idx_crsr = NULL, s_idx_crsr = NULL, ol_idx_crsr = NULL;
+    ib_col_meta_t col_meta;
+    int res = ~0;
+
+    // 定义close_all_crsr函数, 关闭所有表格指针.
+    auto close_all_crsrs = [&]() {
+        if (w_idx_crsr != NULL)
+            ASSERT(ib_cursor_close(w_idx_crsr));
+        if (d_idx_crsr != NULL)
+            ASSERT(ib_cursor_close(d_idx_crsr));
+        if (c_idx_crsr != NULL)
+            ASSERT(ib_cursor_close(c_idx_crsr));
+        if (o_idx_crsr != NULL)
+            ASSERT(ib_cursor_close(o_idx_crsr));
+        if (no_idx_crsr != NULL)
+            ASSERT(ib_cursor_close(no_idx_crsr));
+        if (i_idx_crsr != NULL)
+            ASSERT(ib_cursor_close(i_idx_crsr));
+        if (s_idx_crsr != NULL)
+            ASSERT(ib_cursor_close(s_idx_crsr));
+        if (ol_idx_crsr != NULL)
+            ASSERT(ib_cursor_close(ol_idx_crsr));
+
+        if (w_crsr != NULL)
+            ASSERT(ib_cursor_close(w_crsr));
+        if (d_crsr != NULL)
+            ASSERT(ib_cursor_close(d_crsr));
+        if (c_crsr != NULL)
+            ASSERT(ib_cursor_close(c_crsr));
+        if (o_crsr != NULL)
+            ASSERT(ib_cursor_close(o_crsr));
+        if (no_crsr != NULL)
+            ASSERT(ib_cursor_close(no_crsr));
+        if (i_crsr != NULL)
+            ASSERT(ib_cursor_close(i_crsr));
+        if (s_crsr != NULL)
+            ASSERT(ib_cursor_close(s_crsr));
+        if (ol_crsr != NULL)
+            ASSERT(ib_cursor_close(ol_crsr));
+
+        
+        w_crsr = NULL;
+        d_crsr = NULL;
+        c_crsr = NULL;
+        o_crsr = NULL;
+        no_crsr = NULL;
+        i_crsr = NULL;
+        s_crsr = NULL;
+        ol_crsr = NULL;
+
+        w_idx_crsr = NULL;
+        d_idx_crsr = NULL;
+        c_idx_crsr = NULL;
+        o_idx_crsr = NULL;
+        no_idx_crsr = NULL;
+        i_idx_crsr = NULL;
+        s_idx_crsr = NULL;
+        ol_idx_crsr = NULL;
+    };
+    // 定义commit函数
+    auto trx_commit = [&]() {
+        printf("committed\n");
+        assert(ib_trx != NULL);
+        close_all_crsrs();
+        ASSERT(ib_trx_commit(ib_trx));
+    };
+    // 定义abort函数
+    auto trx_abort = [&]() {
+        if (ib_trx_state(ib_trx) == IB_TRX_ACTIVE)
+        {
+            printf("roll backed\n");
+            assert(ib_trx != NULL);
+            close_all_crsrs();
+            ASSERT(ib_trx_rollback(ib_trx));
+        }
+        else
+        {
+            printf("aborted\n");
+            assert(ib_trx != NULL);
+            close_all_crsrs();
+            ASSERT(ib_trx_release(ib_trx));
+        }
+    };
+
+    /* 1. 创建Transaction */
+    ib_trx = ib_trx_begin(IB_TRX_REPEATABLE_READ);
+    assert(ib_trx != NULL);
+
+    /* 2. 读取Warehouse表格, w_id = _w_id; */
+    printf("Opening table warehouse\n");
+    auto w_tbl = db->tbls[warehouse];
+    auto w_idx = w_tbl.idxs[0];
+    err = open_tbl_and_idx(db->dbname, ib_trx, w_tbl.name, w_crsr, w_idx.name, w_idx_crsr);
+
+
+
+    trx_commit();
     return DB_SUCCESS;
 }
+
+
