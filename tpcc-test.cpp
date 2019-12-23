@@ -21,9 +21,9 @@ int main(int argc, char *argv[])
 {
 	// To do: assign values
     // init_table_size = 100000;
-	num_wh = 1;
+	num_wh = 3;
 	int read_ratio = 50;
-	int thread_num = 10;
+	int thread_num = 4;
 	int duration = 10;
 
 	// Parse args
@@ -48,42 +48,44 @@ int main(int argc, char *argv[])
     };
     err = tpcc_db.init();
 
-	int num = 0;
-	auto barrier = std::make_unique<Barrier>(thread_num + 1);
-	for (int i = 0; i < 5; i++) {
-		ASSERT(tpcc_run_txn(&tpcc_db, 0, num, barrier.get()));
-	}
+	// int num = 0;
+	// auto barrier = std::make_unique<Barrier>(thread_num + 1);
+	// for (int i = 0; i < 5; i++) {
+	// 	ASSERT(tpcc_run_txn(&tpcc_db, 0, num, barrier.get()));
+	// }
 
 	// multi_thread_query
-	// std::thread threads[thread_num];
-	// int num[thread_num];
-	// auto barrier = std::make_unique<Barrier>(thread_num + 1);
+	std::thread threads[thread_num];
+	int num[thread_num];
+	auto barrier = std::make_unique<Barrier>(thread_num + 1);
 
-	// for (int i = 0; i < thread_num; i++)
-	// {
-	// 	num[i] = 0;
-	// 	threads[i] = std::thread(
-	// 		[&](int id) {
-	// 			printf("thread %d start to run_txn\n", id);
-	// 			//err = ycsb_run_txn(DATABASE, TABLE, read_ratio, id, num[id], barrier.get());
-	// 			err = tpcc_run_txn(tpcc_db);
-    //             assert(err == DB_SUCCESS);
-	// 		},
-	// 		i);
-	// }
+	tpcc_rdm.resize(10);
 
-	// barrier->wait();
-    // std::this_thread::sleep_for(std::chrono::seconds(duration));
-    // done = 1;
+	for (int i = 0; i < thread_num; i++)
+	{
+		num[i] = 0;
+		threads[i] = std::thread(
+			[&](int id) {
+				printf("thread %d start to run_txn\n", id);
+				//err = ycsb_run_txn(DATABASE, TABLE, read_ratio, id, num[id], barrier.get());
+				err = tpcc_run_txn(&tpcc_db, id, num[id], barrier.get());
+                // assert(err == DB_SUCCESS);
+			},
+			i);
+	}
+
+	barrier->wait();
+    std::this_thread::sleep_for(std::chrono::seconds(duration));
+    done = 1;
 	
-	// printf("done, wait for join\n");
+	printf("done, wait for join\n");
 
-	// int res = 0;
-	// for (int i = 0; i < thread_num; i++)
-	// {
-	// 	threads[i].join();
-	// 	res += num[i];
-	// }
+	int res = 0;
+	for (int i = 0; i < thread_num; i++)
+	{
+		threads[i].join();
+		res += num[i];
+	}
 	
 	// printf("Drop table\n");
 	// err = drop_table(DATABASE, TABLE);
@@ -91,7 +93,7 @@ int main(int argc, char *argv[])
 
 	err  = tpcc_db.shutdown();
 
-	// printf("total res %d, tps %f\n", res, (double)res/duration);
+	printf("total res %d, tps %f\n", res, (double)res/duration);
 
 	return (EXIT_SUCCESS);
 }

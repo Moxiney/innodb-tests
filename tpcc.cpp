@@ -3,6 +3,7 @@
 #include "tpcc-aux.h"
 #include "tpcc-helper.h"
 #include <assert.h>
+#include <thread>
 
 int done = 0;
 int num_wh = 1;
@@ -135,24 +136,52 @@ ib_err_t tpcc_db_t::init_tables_data()
     tpcc_rdm.resize(num_wh);
 
     auto err = init_item_data();
+    // for (ib_ulint_t wh_id = 1; wh_id <= num_wh; wh_id++)
+    // {
+    //     init_wh_data(wh_id);
+    //     init_dist_data(wh_id);
+    //     init_stock_data(wh_id);
+    //     for (ib_ulint_t dist_id = 1; dist_id <= TPCCConfig::g_dist_per_ware; dist_id++)
+    //     {
+    //         init_cust_data(wh_id, dist_id);
+    //         init_order_data(wh_id, dist_id);
+    //         for (uint64_t cust_id = 1; cust_id <= TPCCConfig::g_cust_per_dist; cust_id++)
+    //         {
+    //             //wl->init_tab_hist(cid, did, wid);
+    //             init_hist_data(wh_id, dist_id, cust_id);
+    //         }
+    //     }
+    // }
+
+    std::thread threads[num_wh];
     for (ib_ulint_t wh_id = 1; wh_id <= num_wh; wh_id++)
     {
-        init_wh_data(wh_id);
-        init_dist_data(wh_id);
-        init_stock_data(wh_id);
-        for (ib_ulint_t dist_id = 1; dist_id <= TPCCConfig::g_dist_per_ware; dist_id++)
-        {
-            // wl->init_tab_cust(did, wid);
-            init_cust_data(wh_id, dist_id);
-            // wl->init_tab_order(did, wid);
-            init_order_data(wh_id, dist_id);
-            for (uint64_t cust_id = 1; cust_id <= TPCCConfig::g_cust_per_dist; cust_id++)
-            {
-                //wl->init_tab_hist(cid, did, wid);
-                init_hist_data(wh_id, dist_id, cust_id);
-            }
-        }
+        threads[wh_id-1] = std::thread(
+            [&](ib_ulint_t wh_id) {
+                printf("thread %d start to init data of wh %d\n", wh_id, wh_id);
+                init_wh_data(wh_id);
+                init_dist_data(wh_id);
+                init_stock_data(wh_id);
+                for (ib_ulint_t dist_id = 1; dist_id <= TPCCConfig::g_dist_per_ware; dist_id++)
+                {
+                    init_cust_data(wh_id, dist_id);
+                    init_order_data(wh_id, dist_id);
+                    for (uint64_t cust_id = 1; cust_id <= TPCCConfig::g_cust_per_dist; cust_id++)
+                    {
+                        //wl->init_tab_hist(cid, did, wid);
+                        init_hist_data(wh_id, dist_id, cust_id);
+                    }
+                }
+                
+            },
+            wh_id);
     }
+    for (ib_ulint_t wh_id = 1; wh_id <= num_wh; wh_id++)
+    {
+        threads[wh_id-1].join();
+    }
+    printf("data initialized \n");
+    // exit(0);
     return err;
 }
 
@@ -301,12 +330,12 @@ ib_err_t tpcc_db_t::init_wh_data(ib_ulint_t wh_id)
     ASSERT(err);
 
     // Print all tuples
-    if (wh_id == num_wh)
-    {
-        printf("Warehouse table initialization completed.\n");
-        err = do_query(crsr);
-        ASSERT(err);
-    }
+    // if (wh_id == num_wh)
+    // {
+    //     printf("Warehouse table initialization completed.\n");
+    //     err = do_query(crsr);
+    //     ASSERT(err);
+    // }
 
     // printf("Close cursor\n");
     err = ib_cursor_close(crsr);
@@ -376,12 +405,12 @@ ib_err_t tpcc_db_t::init_dist_data(ib_ulint_t wh_id)
         tpl = ib_tuple_clear(tpl);
         ASSERT(err);
     }
-    if (wh_id == num_wh)
-    {
-        printf("District table initialization committed.\n");
-        err = do_query(crsr);
-        ASSERT(err);
-    }
+    // if (wh_id == num_wh)
+    // {
+    //     printf("District table initialization committed.\n");
+    //     err = do_query(crsr);
+    //     ASSERT(err);
+    // }
 
     // printf("Close cursor\n");
     err = ib_cursor_close(crsr);
@@ -434,12 +463,12 @@ ib_err_t tpcc_db_t::init_stock_data(ib_ulint_t wh_id)
         tpl = ib_tuple_clear(tpl);
         ASSERT(err);
     }
-    if (wh_id == num_wh)
-    {
-        printf("Stock table initialization completed.\n");
-        err = do_query(crsr);
-        ASSERT(err);
-    }
+    // if (wh_id == num_wh)
+    // {
+    //     printf("Stock table initialization completed.\n");
+    //     err = do_query(crsr);
+    //     ASSERT(err);
+    // }
 
     // printf("Close cursor\n");
     err = ib_cursor_close(crsr);
@@ -518,12 +547,12 @@ ib_err_t tpcc_db_t::init_cust_data(ib_ulint_t wh_id, ib_ulint_t dist_id)
         tpl = ib_tuple_clear(tpl);
         ASSERT(err);
     }
-    if (wh_id == num_wh && dist_id == TPCCConfig::g_dist_per_ware)
-    {
-        printf("Customer table:\n");
-        err = do_query(crsr);
-        ASSERT(err);
-    }
+    // if (wh_id == num_wh && dist_id == TPCCConfig::g_dist_per_ware)
+    // {
+    //     printf("Customer table:\n");
+    //     err = do_query(crsr);
+    //     ASSERT(err);
+    // }
 
     // printf("Close cursor\n");
     err = ib_cursor_close(crsr);
@@ -637,17 +666,17 @@ ib_err_t tpcc_db_t::init_order_data(ib_ulint_t wh_id, ib_ulint_t dist_id)
         }
     }
 
-    if (wh_id == num_wh && dist_id == TPCCConfig::g_dist_per_ware)
-    {
-        printf("Order table: \n");
-        err = do_query(order_crsr);
-        ASSERT(err);
-        printf("Order_line table: \n");
-        err = do_query(ol_crsr);
-        ASSERT(err);
-        printf("New order table: \n");
-        err = do_query(no_crsr);
-    }
+    // if (wh_id == num_wh && dist_id == TPCCConfig::g_dist_per_ware)
+    // {
+    //     printf("Order table: \n");
+    //     err = do_query(order_crsr);
+    //     ASSERT(err);
+    //     printf("Order_line table: \n");
+    //     err = do_query(ol_crsr);
+    //     ASSERT(err);
+    //     printf("New order table: \n");
+    //     err = do_query(no_crsr);
+    // }
 
     // printf("Close cursor\n");
     // Close all crsr
@@ -671,7 +700,7 @@ ib_err_t tpcc_db_t::init_order_data(ib_ulint_t wh_id, ib_ulint_t dist_id)
 ib_err_t tpcc_db_t::init_hist_data(ib_ulint_t wh_id, ib_ulint_t dist_id, ib_ulint_t cust_id)
 {
     // To do
-    //printf("History table %ld-%ld-%ld initialization began.\n", wh_id, dist_id, cust_id);
+    printf("History table %ld-%ld-%ld initialization began.\n", wh_id, dist_id, cust_id);
     ib_err_t err;
     ib_crsr_t crsr;
     ib_trx_t ib_trx;
@@ -715,12 +744,12 @@ ib_err_t tpcc_db_t::init_hist_data(ib_ulint_t wh_id, ib_ulint_t dist_id, ib_ulin
         tpl = ib_tuple_clear(tpl);
         ASSERT(err);
     }
-    if (wh_id == num_wh && dist_id == TPCCConfig::g_dist_per_ware && cust_id == TPCCConfig::g_cust_per_dist)
-    {
-        printf("History table:\n");
-        err = do_query(crsr);
-        ASSERT(err);
-    }
+    // if (wh_id == num_wh && dist_id == TPCCConfig::g_dist_per_ware && cust_id == TPCCConfig::g_cust_per_dist)
+    // {
+    //     printf("History table:\n");
+    //     err = do_query(crsr);
+    //     ASSERT(err);
+    // }
 
     // printf("Close cursor\n");
     err = ib_cursor_close(crsr);
