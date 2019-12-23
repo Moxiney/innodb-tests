@@ -1,5 +1,6 @@
 #include "tpcc.h"
 #include "tpcc-aux.h"
+#include "tpcc-helper.h"
 #include <iostream>
 #include <memory>
 
@@ -14,6 +15,16 @@ ib_err_t open_tbl_and_idx(const char *dbname, ib_trx_t &ib_trx,
     ib_cursor_set_cluster_access(idx_crsr);
     return DB_SUCCESS;
 }
+
+std::string ib_col_get_string(ib_tpl_t tpl, ib_ulint_t i)
+{
+    std::string str;
+    ib_col_meta_t col_meta;
+    auto str_cstr = ib_col_get_value(tpl, i);
+    auto str_len = ib_col_get_meta(tpl, i, &col_meta);
+    str.assign(static_cast<const char *>(str_cstr), str_len);
+    return str;
+};
 
 void tuple_delete(ib_tpl_t &tpl)
 {
@@ -580,7 +591,7 @@ ib_err_t run_new_order(tpcc_db_t *db, tpcc_query *query)
     ib_ulint_t d_no_id;
     if (res == 0)
     {
-        
+
         auto old_tpl = ib_clust_read_tuple_create(d_crsr);
         auto new_tpl = ib_clust_read_tuple_create(d_crsr);
         ASSERT(ib_cursor_read_row(d_idx_crsr, old_tpl));
@@ -590,7 +601,7 @@ ib_err_t run_new_order(tpcc_db_t *db, tpcc_query *query)
         ASSERT(ib_tuple_read_double(old_tpl, D_TAX, &d_tax));
         ASSERT(ib_tuple_read_u64(old_tpl, D_NEXT_O_ID, &d_no_id));
 
-        printf("D_TAX %f, D_NEXT_O_ID %d\n", d_tax, d_no_id);
+        printf("D_TAX %f, D_NEXT_O_ID %ld\n", d_tax, d_no_id);
 
         d_no_id++;
 
@@ -605,11 +616,182 @@ ib_err_t run_new_order(tpcc_db_t *db, tpcc_query *query)
     }
 
     /* 5. 插入Order表格 */
+    printf("Opening table order\n");
+    auto o_tbl = db->tbls[order];
+    ASSERT(open_table(db->dbname, o_tbl.name, ib_trx, &o_crsr));
+    ASSERT(ib_cursor_lock(o_crsr, IB_LOCK_IX));
+
+    auto o_tpl = ib_clust_read_tuple_create(o_crsr);
+    ASSERT(ib_col_set_value(o_tpl, O_ID, &d_no_id, o_tbl.cols[O_ID].len));
+    ASSERT(ib_col_set_value(o_tpl, O_C_ID, &query->c_id, o_tbl.cols[O_C_ID].len));
+    ASSERT(ib_col_set_value(o_tpl, O_D_ID, &query->d_id, o_tbl.cols[O_D_ID].len));
+    ASSERT(ib_col_set_value(o_tpl, O_W_ID, &query->w_id, o_tbl.cols[O_W_ID].len));
+
+    ib_ulint_t o_entry = 2019;
+    ASSERT(ib_col_set_value(o_tpl, O_ENTRY_D, &o_entry, o_tbl.cols[O_ENTRY_D].len));
+    ASSERT(ib_col_set_value(o_tpl, O_OL_CNT, &query->ol_cnt, o_tbl.cols[O_OL_CNT].len));
+
+    ib_ulint_t carrier_id = 0;
+    if (d_no_id < 2101)
+        carrier_id = URand(1, 10, query->w_id - 1);
+    ASSERT(ib_col_set_value(o_tpl, O_CARRIER_ID, &carrier_id, o_tbl.cols[O_CARRIER_ID].len));
+
+    ib_ulint_t all_local = (query->remote ? 0 : 1);
+    ASSERT(ib_col_set_value(o_tpl, O_ALL_LOCAL, &all_local, o_tbl.cols[O_ALL_LOCAL].len));
+
+    print_tuple(stdout, o_tpl);
+
+    err = ib_cursor_insert_row(o_crsr, o_tpl);
+    if (err != DB_SUCCESS)
+    {
+        trx_abort();
+        return err;
+    }
+    o_tpl = ib_tuple_clear(o_tpl);
 
     /* 6. 插入New Order表格 */
+    printf("Opening table new order\n");
+    auto no_tbl = db->tbls[new_order];
+    ASSERT(open_table(db->dbname, no_tbl.name, ib_trx, &no_crsr));
+    ASSERT(ib_cursor_lock(no_crsr, IB_LOCK_IX));
 
-    /* 7. 修改Order line表格*/
+    auto no_tpl = ib_clust_read_tuple_create(no_crsr);
+    ASSERT(ib_col_set_value(no_tpl, NO_O_ID, &d_no_id, no_tbl.cols[NO_O_ID].len));
+    ASSERT(ib_col_set_value(no_tpl, NO_D_ID, &query->d_id, no_tbl.cols[NO_D_ID].len));
+    ASSERT(ib_col_set_value(no_tpl, NO_W_ID, &query->w_id, no_tbl.cols[NO_W_ID].len));
 
+    print_tuple(stdout, no_tpl);
+    err = ib_cursor_insert_row(no_crsr, no_tpl);
+    if (err != DB_SUCCESS)
+    {
+        trx_abort();
+        return err;
+    }
+    close_all_crsrs();
+
+    /* 7. 插入Orderline, 需要查询item以及stock*/
+
+    auto ol_tbl = db->tbls[order_line];
+    auto i_tbl = db->tbls[item];
+    auto s_tbl = db->tbls[stock];
+    auto i_idx = i_tbl.idxs[0];
+    auto s_idx = s_tbl.idxs[0];
+    printf("Opening table orderline\n");
+    printf("Opening table item\n");
+    printf("Opening table stock\n");
+    ASSERT(open_table(db->dbname, ol_tbl.name, ib_trx, &ol_crsr));
+    ASSERT(ib_cursor_lock(ol_crsr, IB_LOCK_IX));
+    err = open_tbl_and_idx(db->dbname, ib_trx, i_tbl.name, i_crsr, i_idx.name, i_idx_crsr);
+    err = open_tbl_and_idx(db->dbname, ib_trx, s_tbl.name, s_crsr, s_idx.name, s_idx_crsr);
+
+    for (ib_ulint_t ol_number = 0; ol_number < query->ol_cnt; ol_number++)
+    {
+        ib_ulint_t ol_i_id = query->items[ol_number].ol_i_id;
+        ib_ulint_t ol_supply_w_id = query->items[ol_number].ol_supply_w_id;
+        ib_ulint_t ol_quantity = query->items[ol_number].ol_quantity;
+
+        /* 7.1 查找item */
+        auto i_sec_key_tpl = ib_sec_search_tuple_create(i_idx_crsr);
+        assert(i_sec_key_tpl != NULL);
+        ASSERT(ib_col_set_value(i_sec_key_tpl, 0, &ol_i_id, i_idx.cols[0].len));
+
+        // print_tuple(stdout, i_sec_key_tpl);
+
+        err = ib_cursor_moveto(i_idx_crsr, i_sec_key_tpl, IB_CUR_GE, &res);
+        if (err != DB_SUCCESS)
+        {
+            trx_abort();
+            return err;
+        }
+        ib_tuple_delete(i_sec_key_tpl);
+
+        uint64_t i_price;
+        std::string i_name;
+        std::string i_data;
+        if (res == 0)
+        {
+            auto old_tpl = ib_clust_read_tuple_create(i_crsr);
+            ASSERT(ib_cursor_read_row(i_idx_crsr, old_tpl));
+
+            // print_tuple(stdout, old_tpl);
+            ASSERT(ib_tuple_read_u64(old_tpl, I_PRICE, &i_price));
+            i_name = ib_col_get_string(old_tpl, I_NAME);
+            i_data = ib_col_get_string(old_tpl, I_DATA);
+            printf("I_Price %ld, I_Name %s, I_DATA %s\n", i_price, i_name.c_str(), i_data.c_str());
+
+            tuple_delete(old_tpl);
+        }
+
+        /* 7.2 查找并且更新stock */
+        auto s_sec_key_tpl = ib_sec_search_tuple_create(s_idx_crsr);
+        assert(s_sec_key_tpl != NULL);
+        ASSERT(ib_col_set_value(s_sec_key_tpl, 0, &ol_supply_w_id, s_idx.cols[0].len));
+        ASSERT(ib_col_set_value(s_sec_key_tpl, 1, &ol_i_id, s_idx.cols[1].len));
+
+        // print_tuple(stdout, s_sec_key_tpl);
+
+        err = ib_cursor_moveto(s_idx_crsr, s_sec_key_tpl, IB_CUR_GE, &res);
+        if (err != DB_SUCCESS)
+        {
+            trx_abort();
+            return err;
+        }
+        ib_tuple_delete(s_sec_key_tpl);
+
+        if (res == 0)
+        {
+            ib_i64_t s_quantity;
+            ib_i64_t quantity;
+            ib_ulint_t s_remote_cnt;
+
+            auto old_tpl = ib_clust_read_tuple_create(s_crsr);
+            auto new_tpl = ib_clust_read_tuple_create(s_crsr);
+            ASSERT(ib_cursor_read_row(s_idx_crsr, old_tpl));
+            ASSERT(ib_tuple_copy(new_tpl, old_tpl));
+
+            print_tuple(stdout, old_tpl);
+
+            ASSERT(ib_tuple_read_i64(old_tpl, S_QUANTITY, &s_quantity));
+            ASSERT(ib_tuple_read_u64(old_tpl, S_REMOTE_CNT, &s_remote_cnt));
+
+            printf("S_Quantity %ld, S_remote_cnt %ld\n", s_quantity, s_remote_cnt);
+            if (query->remote)
+            {
+                s_remote_cnt++;
+                ASSERT(ib_col_set_value(new_tpl, S_REMOTE_CNT, &s_remote_cnt, s_tbl.cols[S_REMOTE_CNT].len));
+            }
+            if (s_quantity > ol_quantity + 10)
+            {
+                quantity = s_quantity - ol_quantity;
+            }
+            else
+            {
+                quantity = s_quantity - ol_quantity + 91;
+            }
+            ASSERT(ib_col_set_value(new_tpl, S_QUANTITY, &quantity, s_tbl.cols[S_QUANTITY].len));
+
+            print_tuple(stdout, new_tpl);
+
+            err = ib_cursor_update_row(s_idx_crsr, old_tpl, new_tpl);
+            assert(err == DB_SUCCESS || err == DB_DUPLICATE_KEY);
+
+            tuple_delete(old_tpl);
+            tuple_delete(new_tpl);
+        }
+
+        /* 7.3 插入order line */
+        auto ol_tpl = ib_clust_read_tuple_create(ol_crsr);
+
+        ASSERT(ib_col_set_value(ol_tpl, OL_O_ID, &d_no_id, ol_tbl.cols[OL_O_ID].len));
+        ASSERT(ib_col_set_value(ol_tpl, OL_D_ID, &query->d_id, ol_tbl.cols[OL_D_ID].len));
+        ASSERT(ib_col_set_value(ol_tpl, OL_W_ID, &query->w_id, ol_tbl.cols[OL_W_ID].len));
+        ASSERT(ib_col_set_value(ol_tpl, OL_NUMBER, &ol_number, ol_tbl.cols[OL_NUMBER].len));
+        ASSERT(ib_col_set_value(ol_tpl, OL_I_ID, &ol_i_id, ol_tbl.cols[OL_I_ID].len));
+
+        print_tuple(stdout, ol_tpl);
+        ASSERT(ib_cursor_insert_row(ol_crsr, ol_tpl));
+        ol_tpl = ib_tuple_clear(ol_tpl);
+    }
 
     trx_commit();
     return DB_SUCCESS;
