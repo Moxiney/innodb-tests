@@ -50,12 +50,9 @@ int main(int argc, char *argv[])
 
 	int num = 0;
 	auto barrier = std::make_unique<Barrier>(thread_num + 1);
-	ASSERT(tpcc_run_txn(&tpcc_db, 0, num, barrier.get()));
-	// err = database_init(DATABASE);
-	// assert(err == DB_SUCCESS);
-
-	// err = ycsb_init(DATABASE, TABLE);
-	// assert(err == DB_SUCCESS);
+	for (int i = 0; i < 5; i++) {
+		ASSERT(tpcc_run_txn(&tpcc_db, 0, num, barrier.get()));
+	}
 
 	// multi_thread_query
 	// std::thread threads[thread_num];
