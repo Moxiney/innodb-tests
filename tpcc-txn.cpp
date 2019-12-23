@@ -3,9 +3,9 @@
 #include <iostream>
 #include <memory>
 
-ib_err_t open_tbl_and_idx(const char *dbname,  ib_trx_t &ib_trx, 
-    const char *tbl_name, ib_crsr_t &tbl_crsr, 
-    const char *idx_name, ib_crsr_t &idx_crsr) 
+ib_err_t open_tbl_and_idx(const char *dbname, ib_trx_t &ib_trx,
+                          const char *tbl_name, ib_crsr_t &tbl_crsr,
+                          const char *idx_name, ib_crsr_t &idx_crsr)
 {
     ASSERT(open_table(dbname, tbl_name, ib_trx, &tbl_crsr));
     ASSERT(ib_cursor_lock(tbl_crsr, IB_LOCK_IX));
@@ -15,12 +15,12 @@ ib_err_t open_tbl_and_idx(const char *dbname,  ib_trx_t &ib_trx,
     return DB_SUCCESS;
 }
 
-void tuple_delete(ib_tpl_t &tpl) {
+void tuple_delete(ib_tpl_t &tpl)
+{
     tpl = ib_tuple_clear(tpl);
     assert(tpl != NULL);
     ib_tuple_delete(tpl);
 }
-
 
 ib_err_t tpcc_run_txn(tpcc_db_t *db, int thd_id, int &num, Barrier *barrier)
 {
@@ -280,13 +280,11 @@ ib_err_t run_payment(tpcc_db_t *db, tpcc_query *query)
     ASSERT(ib_col_set_value(c_sec_key_tpl, 1, &query->c_d_id, c_idx.cols[1].len));
     ASSERT(ib_col_set_value(c_sec_key_tpl, 2, &query->c_w_id, c_idx.cols[2].len));
     print_tuple(stdout, c_sec_key_tpl);
-    
+
     // auto ncols = ib_tuple_get_n_cols(c_sec_key_tpl);
     // if (ncols == 4) {
     //     printf("ncols %ld\n", ncols);
     // }
-    
-    
 
     err = ib_cursor_moveto(c_idx_crsr, c_sec_key_tpl, IB_CUR_GE, &res);
     if (err != DB_SUCCESS || res != 0)
@@ -296,7 +294,6 @@ ib_err_t run_payment(tpcc_db_t *db, tpcc_query *query)
         return err;
     }
     ib_tuple_delete(c_sec_key_tpl);
-
 
     std::string c_credit;
     if (res == 0)
@@ -319,7 +316,6 @@ ib_err_t run_payment(tpcc_db_t *db, tpcc_query *query)
         auto c_credit_cstr = ib_col_get_value(old_tpl, C_CREDIT);
         auto c_credit_len = ib_col_get_meta(old_tpl, C_CREDIT, &col_meta);
         c_credit.assign(static_cast<const char *>(c_credit_cstr), c_credit_len);
-        
 
         c_balance -= query->h_amount;
         c_ytd_payment -= query->h_amount;
@@ -342,7 +338,6 @@ ib_err_t run_payment(tpcc_db_t *db, tpcc_query *query)
 
         ib_tuple_delete(old_tpl);
         ib_tuple_delete(new_tpl);
-
     }
     close_all_crsrs();
 
@@ -364,7 +359,7 @@ ib_err_t run_payment(tpcc_db_t *db, tpcc_query *query)
 
     auto h_tpl = ib_clust_read_tuple_create(h_crsr);
 
-    ASSERT(ib_col_set_value(h_tpl, H_C_ID, &query->c_id, h_tbl.cols[H_C_ID].len));    
+    ASSERT(ib_col_set_value(h_tpl, H_C_ID, &query->c_id, h_tbl.cols[H_C_ID].len));
     ASSERT(ib_col_set_value(h_tpl, H_C_W_ID, &query->c_w_id, h_tbl.cols[H_C_W_ID].len));
     ASSERT(ib_col_set_value(h_tpl, H_D_ID, &query->d_id, h_tbl.cols[H_D_ID].len));
     ASSERT(ib_col_set_value(h_tpl, H_W_ID, &query->w_id, h_tbl.cols[H_W_ID].len));
@@ -393,9 +388,9 @@ ib_err_t run_new_order(tpcc_db_t *db, tpcc_query *query)
     ib_trx_t ib_trx;
     ib_err_t err;
     ib_crsr_t w_crsr = NULL, d_crsr = NULL, c_crsr = NULL, o_crsr = NULL, no_crsr = NULL,
-        i_crsr = NULL, s_crsr = NULL, ol_crsr = NULL;
-    ib_crsr_t w_idx_crsr = NULL, d_idx_crsr = NULL, c_idx_crsr = NULL, o_idx_crsr = NULL, no_idx_crsr = NULL, 
-        i_idx_crsr = NULL, s_idx_crsr = NULL, ol_idx_crsr = NULL;
+              i_crsr = NULL, s_crsr = NULL, ol_crsr = NULL;
+    ib_crsr_t w_idx_crsr = NULL, d_idx_crsr = NULL, c_idx_crsr = NULL, o_idx_crsr = NULL, no_idx_crsr = NULL,
+              i_idx_crsr = NULL, s_idx_crsr = NULL, ol_idx_crsr = NULL;
     ib_col_meta_t col_meta;
     int res = ~0;
 
@@ -435,7 +430,6 @@ ib_err_t run_new_order(tpcc_db_t *db, tpcc_query *query)
         if (ol_crsr != NULL)
             ASSERT(ib_cursor_close(ol_crsr));
 
-        
         w_crsr = NULL;
         d_crsr = NULL;
         c_crsr = NULL;
@@ -483,16 +477,140 @@ ib_err_t run_new_order(tpcc_db_t *db, tpcc_query *query)
     ib_trx = ib_trx_begin(IB_TRX_REPEATABLE_READ);
     assert(ib_trx != NULL);
 
-    /* 2. 读取Warehouse表格, w_id = _w_id; */
+    /* 2. 读取Warehouse表格中W_TAX, w_id = _w_id; */
     printf("Opening table warehouse\n");
     auto w_tbl = db->tbls[warehouse];
     auto w_idx = w_tbl.idxs[0];
     err = open_tbl_and_idx(db->dbname, ib_trx, w_tbl.name, w_crsr, w_idx.name, w_idx_crsr);
 
+    auto w_sec_key_tpl = ib_sec_search_tuple_create(w_idx_crsr);
+    assert(w_sec_key_tpl != NULL);
+    ASSERT(ib_col_set_value(w_sec_key_tpl, 0, &query->w_id, w_idx.cols[0].len));
+
+    err = ib_cursor_moveto(w_idx_crsr, w_sec_key_tpl, IB_CUR_GE, &res);
+    if (err != DB_SUCCESS)
+    {
+        trx_abort();
+        return err;
+    }
+    ib_tuple_delete(w_sec_key_tpl);
+
+    double w_tax;
+
+    if (res == 0)
+    {
+        auto old_tpl = ib_clust_read_tuple_create(w_crsr);
+        ASSERT(ib_cursor_read_row(w_idx_crsr, old_tpl));
+
+        print_tuple(stdout, old_tpl);
+        ASSERT(ib_tuple_read_double(old_tpl, W_TAX, &w_tax));
+
+        tuple_delete(old_tpl);
+    }
+
+    /* 3. 读取Customer表格中C_DISCOUNT, C_LAST, C_CREDIT, w_id = _w_id; */
+    printf("Opening table customer\n");
+    auto c_tbl = db->tbls[customer];
+    auto c_idx = c_tbl.idxs[0];
+    err = open_tbl_and_idx(db->dbname, ib_trx, c_tbl.name, c_crsr, c_idx.name, c_idx_crsr);
+
+    auto c_sec_key_tpl = ib_sec_search_tuple_create(c_idx_crsr);
+    assert(c_sec_key_tpl != NULL);
+    ASSERT(ib_col_set_value(c_sec_key_tpl, 0, &query->c_id, c_idx.cols[0].len));
+    ASSERT(ib_col_set_value(c_sec_key_tpl, 1, &query->d_id, c_idx.cols[1].len));
+    ASSERT(ib_col_set_value(c_sec_key_tpl, 2, &query->w_id, c_idx.cols[2].len));
+    print_tuple(stdout, c_sec_key_tpl);
+
+    err = ib_cursor_moveto(c_idx_crsr, c_sec_key_tpl, IB_CUR_GE, &res);
+    if (err != DB_SUCCESS || res != 0)
+    {
+        printf("res %d\n", res);
+        trx_abort();
+        return err;
+    }
+    ib_tuple_delete(c_sec_key_tpl);
+
+    double c_discount;
+    std::string c_last;
+    std::string c_credit;
+    if (res == 0)
+    {
+
+        auto old_tpl = ib_clust_read_tuple_create(c_crsr);
+        ASSERT(ib_cursor_read_row(c_idx_crsr, old_tpl));
+
+        print_tuple(stdout, old_tpl);
+
+        ASSERT(ib_tuple_read_double(old_tpl, C_DISCOUNT, &c_discount));
+        auto c_last_cstr = ib_col_get_value(old_tpl, C_LAST);
+        auto c_name_len = ib_col_get_meta(old_tpl, C_LAST, &col_meta);
+        c_last.assign(static_cast<const char *>(c_last_cstr), c_name_len);
+        auto c_credit_cstr = ib_col_get_value(old_tpl, C_CREDIT);
+        auto c_credit_len = ib_col_get_meta(old_tpl, C_CREDIT, &col_meta);
+        c_credit.assign(static_cast<const char *>(c_credit_cstr), c_credit_len);
+
+        printf("C_DISCOUNT %f, C_LAST %s, C_CREDIT %s\n", c_discount, c_last.c_str(), c_credit.c_str());
+
+        tuple_delete(old_tpl);
+    }
+
+    /* 4. 读取District表格中D_TAX, 修改D_NO_ID, w_id = _w_id; */
+    printf("Opening table district\n");
+    auto d_tbl = db->tbls[district];
+    auto d_idx = d_tbl.idxs[0];
+    err = open_tbl_and_idx(db->dbname, ib_trx, d_tbl.name, d_crsr, d_idx.name, d_idx_crsr);
+
+    // 4.2 移动d_crsr直到满足d_id = _d_id, d_w_id = _w_id
+    auto d_sec_key_tpl = ib_sec_search_tuple_create(d_idx_crsr);
+    assert(d_sec_key_tpl != NULL);
+    ASSERT(ib_col_set_value(d_sec_key_tpl, 0, &query->d_id, d_idx.cols[0].len));
+    ASSERT(ib_col_set_value(d_sec_key_tpl, 1, &query->w_id, d_idx.cols[1].len));
+
+    print_tuple(stdout, d_sec_key_tpl);
+
+    err = ib_cursor_moveto(d_idx_crsr, d_sec_key_tpl, IB_CUR_GE, &res);
+    if (err != DB_SUCCESS)
+    {
+        trx_abort();
+        return err;
+    }
+    ib_tuple_delete(d_sec_key_tpl);
+
+    double d_tax;
+    ib_ulint_t d_no_id;
+    if (res == 0)
+    {
+        
+        auto old_tpl = ib_clust_read_tuple_create(d_crsr);
+        auto new_tpl = ib_clust_read_tuple_create(d_crsr);
+        ASSERT(ib_cursor_read_row(d_idx_crsr, old_tpl));
+        ASSERT(ib_tuple_copy(new_tpl, old_tpl));
+
+        print_tuple(stdout, old_tpl);
+        ASSERT(ib_tuple_read_double(old_tpl, D_TAX, &d_tax));
+        ASSERT(ib_tuple_read_u64(old_tpl, D_NEXT_O_ID, &d_no_id));
+
+        printf("D_TAX %f, D_NEXT_O_ID %d\n", d_tax, d_no_id);
+
+        d_no_id++;
+
+        ASSERT(ib_col_set_value(new_tpl, D_NEXT_O_ID, &d_no_id, d_tbl.cols[D_NEXT_O_ID].len));
+        print_tuple(stdout, new_tpl);
+
+        err = ib_cursor_update_row(d_idx_crsr, old_tpl, new_tpl);
+        assert(err == DB_SUCCESS || err == DB_DUPLICATE_KEY);
+
+        tuple_delete(old_tpl);
+        tuple_delete(new_tpl);
+    }
+
+    /* 5. 插入Order表格 */
+
+    /* 6. 插入New Order表格 */
+
+    /* 7. 修改Order line表格*/
 
 
     trx_commit();
     return DB_SUCCESS;
 }
-
-
