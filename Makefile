@@ -1,4 +1,4 @@
-all: native-test
+all: ycsb-test tpcc-test
 
 native-test:
 	g++ -c common.cpp
@@ -10,7 +10,6 @@ ycsb-test: clean
 	g++ -c ycsb-test.cpp
 	g++ -c ycsb.cpp 
 	g++ common.o ycsb-test.o ycsb.o -o ycsb-test -linnodb -pthread
-	./ycsb-test
 
 tpcc-test: clean
 	g++ -c common.cpp
@@ -20,10 +19,9 @@ tpcc-test: clean
 	g++ -c tpcc-helper.cpp
 	g++ -c tpcc-query.cpp
 	g++ common.o tpcc-test.o tpcc-query.o tpcc.o tpcc-helper.o tpcc-txn.o -o tpcc-test -linnodb -pthread
-	./tpcc-test
 
 run:
-	./native-test
+	# ./native-test
 
 
 clean:

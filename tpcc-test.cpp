@@ -6,6 +6,7 @@
 #include <thread>
 #include <iostream>
 #include <memory>
+#include <getopt.h>
 
 #include "/usr/local/include/embedded_innodb-1.0/innodb.h"
 #include "common.h"
@@ -17,16 +18,66 @@
 #define TABLE "t"
 #define INDEX "F0"
 
+static void usage_exit()
+{
+
+	std::cout << "Command line options : tpcc_bench <options> \n";
+	std::cout << "   -h --help              : Print help message \n";
+	std::cout << "   -n --num               : Thread num\n";
+	std::cout << "   -d --duration          : Duration time: (second)\n";
+	std::cout << "   -w --warehouse         : number of warehouses(1-10)\n";
+	exit(EXIT_FAILURE);
+}
+
+static struct option opts[] = {
+	{"help", no_argument, NULL, 'h'},
+	{"num", required_argument, NULL, 'n'},
+	{"duration", required_argument, NULL, 'd'},
+	{"warehouse", required_argument, NULL, 'w'},
+};
+
 int main(int argc, char *argv[])
 {
 	// To do: assign values
-    // init_table_size = 100000;
+	// init_table_size = 100000;
 	num_wh = 3;
 	int read_ratio = 50;
 	int thread_num = 4;
 	int duration = 10;
 
 	// Parse args
+	while (1) {
+        int idx = 0;
+        int c = getopt_long(argc, argv, "h:n:d:w:", opts, &idx);
+
+        if (c == -1)
+            break;
+
+        switch (c) {
+        case 'n':
+            thread_num = atoi(optarg);
+            break;
+        case 'd':
+            duration = atoi(optarg);
+            break;
+        case 'w':
+            num_wh = atoi(optarg);
+            break;
+        case 'h':
+            usage_exit();
+            break;
+        default:
+            fprintf(stderr, "\nUnknown option: -%c-\n", c);
+            usage_exit();
+            break;
+        }
+    }
+	printf("warehouse number %d\n", num_wh);
+	printf("thread number %d \n", thread_num);
+	printf("duration %d\n", duration);
+
+	
+
 
 
 
@@ -41,12 +92,11 @@ int main(int argc, char *argv[])
 		   (int)((version >> 16)) & 0xffff, /* Revisiion */
 		   (int)(version & 0xffff));		/* Age */
 
-    tpcc_db_t tpcc_db = {
-        "TPCC",
-        {WAREHOUSE, DISTRICT, CUSTOMER, HISTORY, NEW_ORDER, ORDER, ORDER_LINE, ITEM, STOCK},
-		num_wh
-    };
-    err = tpcc_db.init();
+	tpcc_db_t tpcc_db = {
+		"TPCC",
+		{WAREHOUSE, DISTRICT, CUSTOMER, HISTORY, NEW_ORDER, ORDER, ORDER_LINE, ITEM, STOCK},
+		num_wh};
+	err = tpcc_db.init();
 
 	// int num = 0;
 	// auto barrier = std::make_unique<Barrier>(thread_num + 1);
@@ -69,15 +119,15 @@ int main(int argc, char *argv[])
 				printf("thread %d start to run_txn\n", id);
 				//err = ycsb_run_txn(DATABASE, TABLE, read_ratio, id, num[id], barrier.get());
 				err = tpcc_run_txn(&tpcc_db, id, num[id], barrier.get());
-                // assert(err == DB_SUCCESS);
+				// assert(err == DB_SUCCESS);
 			},
 			i);
 	}
 
-	barrier->wait();
-    std::this_thread::sleep_for(std::chrono::seconds(duration));
-    done = 1;
-	
+	// barrier->wait();
+	// std::this_thread::sleep_for(std::chrono::seconds(duration));
+	done = 1;
+
 	printf("done, wait for join\n");
 
 	int res = 0;
@@ -86,14 +136,14 @@ int main(int argc, char *argv[])
 		threads[i].join();
 		res += num[i];
 	}
-	
+
 	// printf("Drop table\n");
 	// err = drop_table(DATABASE, TABLE);
 	// assert(err == DB_SUCCESS);
 
-	err  = tpcc_db.shutdown();
+	err = tpcc_db.shutdown();
 
-	printf("total res %d, tps %f\n", res, (double)res/duration);
+	printf("total res %d, tps %f\n", res, (double)res / duration);
 
 	return (EXIT_SUCCESS);
 }
