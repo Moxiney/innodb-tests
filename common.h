@@ -54,6 +54,11 @@ void print_tuple(
     FILE *stream,
     const ib_tpl_t tpl);
 
+ib_err_t
+do_query(
+    /*=====*/
+    ib_crsr_t crsr);
+
 class RandomGenerator
 {
     unsigned short seed[3];

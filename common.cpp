@@ -10,7 +10,7 @@
 #include <getopt.h>
 
 static const char log_group_home_dir[] = "log";
-static const char data_file_path[] = "ibdata1:32M:autoextend";
+static const char data_file_path[] = "ibdata1:128M:autoextend";
 
 ib_err_t
 create_database(
@@ -68,7 +68,7 @@ ib_err_t test_configure(void)
     err = ib_cfg_set_int("additional_mem_pool_size", 4 * 1024 * 1024);
     assert(err == DB_SUCCESS);
 
-    err = ib_cfg_set_int("flush_log_at_trx_commit", 1);
+    err = ib_cfg_set_int("flush_log_at_trx_commit", 0);
     assert(err == DB_SUCCESS);
 
     err = ib_cfg_set_int("file_io_threads", 4);
@@ -378,4 +378,53 @@ void print_tuple(
         fprintf(stream, "|");
     }
     fprintf(stream, "\n");
+}
+
+/*********************************************************************
+SELECT * FROM T; */
+ib_err_t
+do_query(
+    /*=====*/
+    ib_crsr_t crsr)
+{
+    ib_err_t err;
+    ib_tpl_t tpl;
+
+    tpl = ib_clust_read_tuple_create(crsr);
+    assert(tpl != NULL);
+
+    err = ib_cursor_first(crsr);
+    assert(err == DB_SUCCESS);
+
+    while (err == DB_SUCCESS)
+    {
+        err = ib_cursor_read_row(crsr, tpl);
+
+        assert(err == DB_SUCCESS || err == DB_END_OF_INDEX || err == DB_RECORD_NOT_FOUND);
+
+        if (err == DB_RECORD_NOT_FOUND || err == DB_END_OF_INDEX)
+        {
+            break;
+        }
+
+        print_tuple(stdout, tpl);
+
+        err = ib_cursor_next(crsr);
+
+        assert(err == DB_SUCCESS || err == DB_END_OF_INDEX || err == DB_RECORD_NOT_FOUND);
+
+        tpl = ib_tuple_clear(tpl);
+        assert(tpl != NULL);
+    }
+
+    if (tpl != NULL)
+    {
+        ib_tuple_delete(tpl);
+    }
+
+    if (err == DB_RECORD_NOT_FOUND || err == DB_END_OF_INDEX)
+    {
+        err = DB_SUCCESS;
+    }
+    return (err);
 }
