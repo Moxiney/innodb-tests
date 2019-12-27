@@ -124,8 +124,8 @@ int main(int argc, char *argv[])
 			i);
 	}
 
-	// barrier->wait();
-	// std::this_thread::sleep_for(std::chrono::seconds(duration));
+	barrier->wait();
+	std::this_thread::sleep_for(std::chrono::seconds(duration));
 	done = 1;
 
 	printf("done, wait for join\n");
