@@ -54,7 +54,7 @@ ib_err_t ib_tbl_t::create_table(const char *dbname)
         {
             err = ib_index_schema_add_col(ib_idx_sch, idx_col.name, 0);
             ASSERT(err);
-            printf("Add index col  %s\n", idx_col.name);
+            // printf("Add index col  %s\n", idx_col.name);
         }
 
         if (i == 0)
@@ -171,7 +171,9 @@ ib_err_t tpcc_db_t::init_tables_data()
                         //wl->init_tab_hist(cid, did, wid);
                         init_hist_data(wh_id, dist_id, cust_id);
                     }
+                    printf("thread %ld start to init data of wh %ld, dist %ld\n", wh_id, wh_id, dist_id);
                 }
+                
                 
             },
             wh_id);
@@ -248,9 +250,9 @@ ib_err_t tpcc_db_t::init_item_data()
     }
 
     printf("Item table initialization completed\n");
-    err = do_query(crsr);
-    ASSERT(err);
-    ;
+    // err = do_query(crsr);
+    // ASSERT(err);
+    // ;
 
     // printf("Close cursor\n");
     err = ib_cursor_close(crsr);
@@ -700,7 +702,7 @@ ib_err_t tpcc_db_t::init_order_data(ib_ulint_t wh_id, ib_ulint_t dist_id)
 ib_err_t tpcc_db_t::init_hist_data(ib_ulint_t wh_id, ib_ulint_t dist_id, ib_ulint_t cust_id)
 {
     // To do
-    printf("History table %ld-%ld-%ld initialization began.\n", wh_id, dist_id, cust_id);
+    // printf("History table %ld-%ld-%ld initialization began.\n", wh_id, dist_id, cust_id);
     ib_err_t err;
     ib_crsr_t crsr;
     ib_trx_t ib_trx;
