@@ -11,6 +11,7 @@
 
 static const char log_group_home_dir[] = "log";
 static const char data_file_path[] = "ibdata1:128M:autoextend";
+static const char data_home_dir[] = "../ib_data/";
 
 ib_err_t
 create_database(
@@ -53,7 +54,7 @@ ib_err_t test_configure(void)
     err = ib_cfg_set_text("flush_method", "O_DIRECT");
     assert(err == DB_SUCCESS);
 
-    err = ib_cfg_set_int("log_files_in_group", 2);
+    err = ib_cfg_set_int("log_files_in_group", 4);
     assert(err == DB_SUCCESS);
 
     err = ib_cfg_set_int("log_file_size", 32 * 1024 * 1024);
@@ -62,7 +63,7 @@ ib_err_t test_configure(void)
     err = ib_cfg_set_int("log_buffer_size", 24 * 16384);
     assert(err == DB_SUCCESS);
 
-    err = ib_cfg_set_int("buffer_pool_size", 5 * 1024 * 1024);
+    err = ib_cfg_set_int("buffer_pool_size", 100 * 1024 * 1024);
     assert(err == DB_SUCCESS);
 
     err = ib_cfg_set_int("additional_mem_pool_size", 4 * 1024 * 1024);
@@ -95,7 +96,7 @@ ib_err_t test_configure(void)
     err = ib_cfg_set_bool_on("file_per_table");
     assert(err == DB_SUCCESS);
 
-    err = ib_cfg_set_text("data_home_dir", "./");
+    err = ib_cfg_set_text("data_home_dir", data_home_dir);
     assert(err == DB_SUCCESS);
 
     err = ib_cfg_set_text("log_group_home_dir", log_group_home_dir);
