@@ -166,11 +166,12 @@ ib_err_t tpcc_db_t::init_tables_data()
                 {
                     init_cust_data(wh_id, dist_id);
                     init_order_data(wh_id, dist_id);
-                    for (uint64_t cust_id = 1; cust_id <= TPCCConfig::g_cust_per_dist; cust_id++)
-                    {
-                        //wl->init_tab_hist(cid, did, wid);
-                        init_hist_data(wh_id, dist_id, cust_id);
-                    }
+                    init_hist_data(wh_id, dist_id);
+                    // for (uint64_t cust_id = 1; cust_id <= TPCCConfig::g_cust_per_dist; cust_id++)
+                    // {
+                    //     //wl->init_tab_hist(cid, did, wid);
+                        
+                    // }
                     printf("thread %ld start to init data of wh %ld, dist %ld\n", wh_id, wh_id, dist_id);
                 }
                 
@@ -699,7 +700,7 @@ ib_err_t tpcc_db_t::init_order_data(ib_ulint_t wh_id, ib_ulint_t dist_id)
     return DB_SUCCESS;
 }
 
-ib_err_t tpcc_db_t::init_hist_data(ib_ulint_t wh_id, ib_ulint_t dist_id, ib_ulint_t cust_id)
+ib_err_t tpcc_db_t::init_hist_data(ib_ulint_t wh_id, ib_ulint_t dist_id)
 {
     // To do
     // printf("History table %ld-%ld-%ld initialization began.\n", wh_id, dist_id, cust_id);

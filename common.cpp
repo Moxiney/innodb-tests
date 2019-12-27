@@ -69,7 +69,7 @@ ib_err_t test_configure(void)
     err = ib_cfg_set_int("additional_mem_pool_size", 4 * 1024 * 1024);
     assert(err == DB_SUCCESS);
 
-    err = ib_cfg_set_int("flush_log_at_trx_commit", 2);
+    err = ib_cfg_set_int("flush_log_at_trx_commit", 1);
     assert(err == DB_SUCCESS);
 
     err = ib_cfg_set_int("file_io_threads", 4);

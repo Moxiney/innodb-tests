@@ -70,7 +70,7 @@ private:
     ib_err_t init_stock_data(ib_ulint_t wh_id);
     ib_err_t init_cust_data(ib_ulint_t wh_id, ib_ulint_t dist_id);
     ib_err_t init_order_data(ib_ulint_t wh_id, ib_ulint_t dist_id);
-    ib_err_t init_hist_data(ib_ulint_t wh_id, ib_ulint_t dist_id, ib_ulint_t cust_id);
+    ib_err_t init_hist_data(ib_ulint_t wh_id, ib_ulint_t dist_id);
 
     void init_permutation(ib_ulint_t *perm_c_id, ib_ulint_t wh_id);
 };
