@@ -44,6 +44,7 @@ int main(int argc, char *argv[])
 	int read_ratio = 50;
 	int thread_num = 4;
 	int duration = 10;
+	int buff_size = 400;
 
 	// Parse args
 	while (1) {
@@ -96,7 +97,7 @@ int main(int argc, char *argv[])
 		"TPCC",
 		{WAREHOUSE, DISTRICT, CUSTOMER, HISTORY, NEW_ORDER, ORDER, ORDER_LINE, ITEM, STOCK},
 		num_wh};
-	err = tpcc_db.init();
+	err = tpcc_db.init(buff_size);
 
 	// int num = 0;
 	// auto barrier = std::make_unique<Barrier>(thread_num + 1);

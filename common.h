@@ -10,7 +10,7 @@ create_directory(
     /*=============*/
     const char *path);
 
-ib_err_t test_configure(void);
+ib_err_t test_configure(int buff_size);
 
 ib_err_t
 create_database(
@@ -28,7 +28,7 @@ open_table(
     ib_crsr_t *crsr);    /*!< out: innodb cursor */
 
 
-ib_err_t database_init(const char *dbname);
+ib_err_t database_init(const char *dbname, int buff_size);
 
 ib_err_t
 drop_table(

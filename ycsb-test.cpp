@@ -39,6 +39,7 @@ int main(int argc, char *argv[])
 	int read_ratio = 50;
 	int thread_num = 1;
 	int duration = 10;
+	int buff_size = 400;
 
 	// Parse args
 	while (1)
@@ -90,7 +91,7 @@ int main(int argc, char *argv[])
 		   (int)((version >> 16)) & 0xffff, /* Revisiion */
 		   (int)(version & 0xffff));		/* Age */
 
-	err = database_init(DATABASE);
+	err = database_init(DATABASE, buff_size);
 	assert(err == DB_SUCCESS);
 
 	err = ycsb_init(DATABASE, TABLE);

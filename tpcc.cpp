@@ -90,10 +90,10 @@ ib_err_t ib_tbl_t::drop_table(const char *dbname)
     return DB_SUCCESS;
 }
 
-ib_err_t tpcc_db_t::init()
+ib_err_t tpcc_db_t::init(int buff_size)
 {
     // To do: init db and tables
-    auto err = database_init(dbname);
+    auto err = database_init(dbname, buff_size);
     ASSERT(err);
 
     for (auto tbl : tbls)

@@ -23,7 +23,7 @@ class TPCCConfig {
     // TODO: 暂时调小测试正确性
     const static int g_dist_per_ware = 10; // 每个仓库给几个地区供货
     const static int g_cust_per_dist = 3000; // 每个地区客户数量
-    const static int g_max_items = 10000;    // 供应的商品种类
+    const static int g_max_items = 100000;    // 供应的商品种类
 
     const static int firstname_minlen = 8;
     const static int firstname_len = 16;
@@ -60,7 +60,7 @@ public:
     tpcc_db_t() = default;
     ~tpcc_db_t() = default;
 
-    ib_err_t init();
+    ib_err_t init(int buff_size);
     ib_err_t shutdown();
     ib_err_t init_tables_data();
 private:

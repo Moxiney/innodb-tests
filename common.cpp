@@ -44,7 +44,7 @@ create_directory(
     }
 }
 
-ib_err_t test_configure(void)
+ib_err_t test_configure(int buff_size)
 /*================*/
 {
     ib_err_t err;
@@ -63,7 +63,7 @@ ib_err_t test_configure(void)
     err = ib_cfg_set_int("log_buffer_size", 24 * 16384);
     assert(err == DB_SUCCESS);
 
-    err = ib_cfg_set_int("buffer_pool_size", 400 * 1024 * 1024);
+    err = ib_cfg_set_int("buffer_pool_size", buff_size * 1024 * 1024);
     assert(err == DB_SUCCESS);
 
     err = ib_cfg_set_int("additional_mem_pool_size", 4 * 1024 * 1024);
@@ -143,13 +143,13 @@ open_table(
 }
 
 ib_err_t database_init(
-    const char *dbname)
+    const char *dbname, int buff_size)
 {
     ib_err_t err;
     err = ib_init();
 	assert(err == DB_SUCCESS);
 
-	err = test_configure();
+	err = test_configure(buff_size);
 	assert(err == DB_SUCCESS);
 
 	err = ib_startup("barracuda");
