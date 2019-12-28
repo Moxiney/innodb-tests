@@ -31,6 +31,8 @@ static struct option opts[] = {
     {"num", required_argument, NULL, 'n'},
     {"duration", required_argument, NULL, 'd'},
     {"key_number", required_argument, NULL, 'k'},
+	{"buff_size", required_argument, NULL, 'b'},
+	{"read_ratio", required_argument, NULL, 'r'},
 };
 
 int main(int argc, char *argv[])
@@ -45,7 +47,7 @@ int main(int argc, char *argv[])
 	while (1)
 	{
 		int idx = 0;
-		int c = getopt_long(argc, argv, "h:n:d:k:b:", opts, &idx);
+		int c = getopt_long(argc, argv, "h:n:d:k:b:r:", opts, &idx);
 
 		if (c == -1)
 			break;
@@ -62,7 +64,10 @@ int main(int argc, char *argv[])
 			init_table_size = atoi(optarg);
 			break;
 		case 'b':
-			//bench = (workload::YCSBWorkLoad)atoi(optarg);
+			buff_size = atoi(optarg);
+			break;
+		case 'r':
+			read_ratio = atoi(optarg);
 			break;
 		case 'h':
 			usage_exit();
@@ -77,6 +82,8 @@ int main(int argc, char *argv[])
 	printf("key number %d\n", init_table_size);
 	printf("thread number %d \n", thread_num);
 	printf("duration %d\n", duration);
+	printf("read ratio %d\n", read_ratio);
+	printf("buff size %d\n", buff_size);
 
 	
 

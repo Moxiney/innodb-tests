@@ -34,6 +34,7 @@ static struct option opts[] = {
 	{"num", required_argument, NULL, 'n'},
 	{"duration", required_argument, NULL, 'd'},
 	{"warehouse", required_argument, NULL, 'w'},
+	{"buff_size", required_argument, NULL, 'b'},
 };
 
 int main(int argc, char *argv[])
@@ -41,7 +42,6 @@ int main(int argc, char *argv[])
 	// To do: assign values
 	// init_table_size = 100000;
 	num_wh = 3;
-	int read_ratio = 50;
 	int thread_num = 4;
 	int duration = 10;
 	int buff_size = 400;
@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
 	// Parse args
 	while (1) {
         int idx = 0;
-        int c = getopt_long(argc, argv, "h:n:d:w:", opts, &idx);
+        int c = getopt_long(argc, argv, "h:n:d:w:b:", opts, &idx);
 
         if (c == -1)
             break;
@@ -64,6 +64,9 @@ int main(int argc, char *argv[])
         case 'w':
             num_wh = atoi(optarg);
             break;
+		case 'b':
+            buff_size = atoi(optarg);
+            break;
         case 'h':
             usage_exit();
             break;
@@ -76,7 +79,7 @@ int main(int argc, char *argv[])
 	printf("warehouse number %d\n", num_wh);
 	printf("thread number %d \n", thread_num);
 	printf("duration %d\n", duration);
-
+	printf("buff size %d\n", buff_size);
 	
 
 
@@ -99,11 +102,6 @@ int main(int argc, char *argv[])
 		num_wh};
 	err = tpcc_db.init(buff_size);
 
-	// int num = 0;
-	// auto barrier = std::make_unique<Barrier>(thread_num + 1);
-	// for (int i = 0; i < 5; i++) {
-	// 	ASSERT(tpcc_run_txn(&tpcc_db, 0, num, barrier.get()));
-	// }
 
 	// multi_thread_query
 	std::thread threads[thread_num];

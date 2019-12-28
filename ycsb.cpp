@@ -58,7 +58,7 @@ create_table(
         err = ib_table_schema_add_col(
             ib_tbl_sch, col_name,
             IB_VARCHAR, IB_COL_NONE, 0, COL_LEN - 1);
-        printf("Add column %s\n", col_name);
+        //printf("Add column %s\n", col_name);
 
         assert(err == DB_SUCCESS);
     }
@@ -383,23 +383,23 @@ ib_err_t ycsb_init(
     ib_crsr_t crsr;
     ib_trx_t ib_trx;
 
-    printf("Create table\n");
+    //printf("Create table\n");
     err = create_table(dbname, name);
     assert(err == DB_SUCCESS);
 
-    printf("Begin transaction\n");
+    //printf("Begin transaction\n");
     ib_trx = ib_trx_begin(IB_TRX_REPEATABLE_READ);
     assert(ib_trx != NULL);
 
-    printf("Open cursor\n");
+    //printf("Open cursor\n");
     err = open_table(dbname, name, ib_trx, &crsr);
     assert(err == DB_SUCCESS);
 
-    printf("Lock table in IX\n");
+    //printf("Lock table in IX\n");
     err = ib_cursor_lock(crsr, IB_LOCK_IX);
     assert(err == DB_SUCCESS);
 
-    printf("Insert rows\n");
+    //printf("Insert rows\n");
     err = insert_rows(crsr);
     assert(err == DB_SUCCESS);
 
@@ -407,12 +407,12 @@ ib_err_t ycsb_init(
     // err = do_query(crsr);
     // assert(err == DB_SUCCESS);
 
-    printf("Close cursor\n");
+    //printf("Close cursor\n");
     err = ib_cursor_close(crsr);
     assert(err == DB_SUCCESS);
     crsr = NULL;
 
-    printf("Commit transaction\n");
+    //printf("Commit transaction\n");
     err = ib_trx_commit(ib_trx);
     assert(err == DB_SUCCESS);
 

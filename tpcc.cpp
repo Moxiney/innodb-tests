@@ -62,7 +62,7 @@ ib_err_t ib_tbl_t::create_table(const char *dbname)
             err = ib_index_schema_set_clustered(ib_idx_sch);
             ASSERT(err);
         }
-        printf("Add index  %s\n", idx.name);
+        // printf("Add index  %s\n", idx.name);
     }
 
     /* create table */
@@ -102,7 +102,7 @@ ib_err_t tpcc_db_t::init(int buff_size)
         // printf("start to init table %s.\n", tbl.name);
         err = tbl.create_table(dbname);
         ASSERT(err);
-        printf("created table %s.\n", tbl.name);
+        // printf("created table %s.\n", tbl.name);
     }
 
     // insert rows to tables
@@ -140,7 +140,7 @@ ib_err_t tpcc_db_t::init_tables_data()
             //             init_hist_data(wh_id, dist_id, cust_id);
 			// // printf("%ld-%ld-%ld\n", wh_id, dist_id, cust_id);
             //         }
-                    printf("thread %ld start to init data of wh %ld, dist %ld\n", wh_id, wh_id, dist_id);
+                    // printf("thread %ld start to init data of wh %ld, dist %ld\n", wh_id, wh_id, dist_id);
                 }
                 
                 
@@ -218,7 +218,7 @@ ib_err_t tpcc_db_t::init_item_data()
         ASSERT(err);
     }
 
-    printf("Item table initialization completed\n");
+    // printf("Item table initialization completed\n");
     // err = do_query(crsr);
     // ASSERT(err);
     // ;
