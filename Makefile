@@ -34,3 +34,4 @@ clean:
 	rm -rf test
 	rm -rf TPCC
 	rm -rf ../ib_data/*
+	rm -rf /mnt/pmem0/caishiyu/ibd/*

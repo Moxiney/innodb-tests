@@ -9,9 +9,9 @@
 #include <errno.h>
 #include <getopt.h>
 
-static const char log_group_home_dir[] = "log";
+static const char log_group_home_dir[] = "/mnt/pmem0/caishiyu/ibd/log";
 static const char data_file_path[] = "ibdata1:256M:autoextend";
-static const char data_home_dir[] = "../ib_data/";
+static const char data_home_dir[] = "/mnt/pmem0/caishiyu/ibd/";
 
 ib_err_t
 create_database(
@@ -63,13 +63,13 @@ ib_err_t test_configure(void)
     err = ib_cfg_set_int("log_buffer_size", 24 * 16384);
     assert(err == DB_SUCCESS);
 
-    err = ib_cfg_set_int("buffer_pool_size", 100 * 1024 * 1024);
+    err = ib_cfg_set_int("buffer_pool_size", 400 * 1024 * 1024);
     assert(err == DB_SUCCESS);
 
     err = ib_cfg_set_int("additional_mem_pool_size", 4 * 1024 * 1024);
     assert(err == DB_SUCCESS);
 
-    err = ib_cfg_set_int("flush_log_at_trx_commit", 2);
+    err = ib_cfg_set_int("flush_log_at_trx_commit", 1);
     assert(err == DB_SUCCESS);
 
     err = ib_cfg_set_int("file_io_threads", 4);

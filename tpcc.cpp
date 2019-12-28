@@ -65,24 +65,6 @@ ib_err_t ib_tbl_t::create_table(const char *dbname)
         printf("Add index  %s\n", idx.name);
     }
 
-    // if (idx_cols.size() > 0)
-    // {
-    //     // If index is not empty.
-    //     err = ib_table_schema_add_index(ib_tbl_sch, idx_name, &ib_idx_sch);
-    //     ASSERT(err);
-
-    //     /* Add cols to index schema and Set prefix length to 0. */
-    //     for (auto idx_col : idx_cols)
-    //     {
-    //         err = ib_index_schema_add_col(ib_idx_sch, idx_col.name, 0);
-    //         ASSERT(err);
-    //         // printf("Add index column %s\n", idx_col.name);
-    //     }
-
-    //     err = ib_index_schema_set_clustered(ib_idx_sch);
-    //     ASSERT(err);
-    // }
-
     /* create table */
     ib_trx = ib_trx_begin(IB_TRX_REPEATABLE_READ);
     err = ib_schema_lock_exclusive(ib_trx);
@@ -136,22 +118,6 @@ ib_err_t tpcc_db_t::init_tables_data()
     tpcc_rdm.resize(num_wh);
 
     auto err = init_item_data();
-    // for (ib_ulint_t wh_id = 1; wh_id <= num_wh; wh_id++)
-    // {
-    //     init_wh_data(wh_id);
-    //     init_dist_data(wh_id);
-    //     init_stock_data(wh_id);
-    //     for (ib_ulint_t dist_id = 1; dist_id <= TPCCConfig::g_dist_per_ware; dist_id++)
-    //     {
-    //         init_cust_data(wh_id, dist_id);
-    //         init_order_data(wh_id, dist_id);
-    //         for (uint64_t cust_id = 1; cust_id <= TPCCConfig::g_cust_per_dist; cust_id++)
-    //         {
-    //             //wl->init_tab_hist(cid, did, wid);
-    //             init_hist_data(wh_id, dist_id, cust_id);
-    //         }
-    //     }
-    // }
 
     std::thread threads[num_wh];
     for (ib_ulint_t wh_id = 1; wh_id <= num_wh; wh_id++)
@@ -166,11 +132,14 @@ ib_err_t tpcc_db_t::init_tables_data()
                 {
                     init_cust_data(wh_id, dist_id);
                     init_order_data(wh_id, dist_id);
-                    for (uint64_t cust_id = 1; cust_id <= TPCCConfig::g_cust_per_dist; cust_id++)
-                    {
-                        //wl->init_tab_hist(cid, did, wid);
-                        init_hist_data(wh_id, dist_id, cust_id);
-                    }
+                    init_hist_data(wh_id, dist_id);
+
+            //         for (uint64_t cust_id = 1; cust_id <= TPCCConfig::g_cust_per_dist; cust_id++)
+            //         {
+            //             //wl->init_tab_hist(cid, did, wid);
+            //             init_hist_data(wh_id, dist_id, cust_id);
+			// // printf("%ld-%ld-%ld\n", wh_id, dist_id, cust_id);
+            //         }
                     printf("thread %ld start to init data of wh %ld, dist %ld\n", wh_id, wh_id, dist_id);
                 }
                 
@@ -699,7 +668,7 @@ ib_err_t tpcc_db_t::init_order_data(ib_ulint_t wh_id, ib_ulint_t dist_id)
     return DB_SUCCESS;
 }
 
-ib_err_t tpcc_db_t::init_hist_data(ib_ulint_t wh_id, ib_ulint_t dist_id, ib_ulint_t cust_id)
+ib_err_t tpcc_db_t::init_hist_data(ib_ulint_t wh_id, ib_ulint_t dist_id)
 {
     // To do
     // printf("History table %ld-%ld-%ld initialization began.\n", wh_id, dist_id, cust_id);
@@ -734,24 +703,12 @@ ib_err_t tpcc_db_t::init_hist_data(ib_ulint_t wh_id, ib_ulint_t dist_id, ib_ulin
         ASSERT(ib_col_set_value(tpl, H_DATE, &val, hist_tbl.cols[H_DATE].len));
         double amount = 10.0;
         ASSERT(ib_col_set_value(tpl, H_AMOUNT, &amount, hist_tbl.cols[H_AMOUNT].len));
-        // t_history->set_row_value_int(data, H_C_ID, c_id);
-        // t_history->set_row_value_int(data, H_C_D_ID, d_id);
-        // t_history->set_row_value_int(data, H_C_W_ID, w_id);
-        // t_history->set_row_value_int(data, H_D_ID, d_id);
-        // t_history->set_row_value_int(data, H_W_ID, w_id);
-        // t_history->set_row_value_int(data, H_DATE, 0);
-        // t_history->set_row_value_double(data, H_AMOUNT, 10.0);
+
 
         ASSERT(ib_cursor_insert_row(crsr, tpl));
         tpl = ib_tuple_clear(tpl);
         ASSERT(err);
     }
-    // if (wh_id == num_wh && dist_id == TPCCConfig::g_dist_per_ware && cust_id == TPCCConfig::g_cust_per_dist)
-    // {
-    //     printf("History table:\n");
-    //     err = do_query(crsr);
-    //     ASSERT(err);
-    // }
 
     // printf("Close cursor\n");
     err = ib_cursor_close(crsr);
