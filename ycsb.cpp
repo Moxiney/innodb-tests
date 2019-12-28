@@ -5,6 +5,7 @@
 #include <string>
 #include <iostream>
 #include <thread>
+#include <cstdlib>
 
 #include "ycsb.h"
 #include "common.h"
@@ -428,7 +429,7 @@ ib_err_t ycsb_run_txn(
     const char *name,
     int read_ratio,
     int thread_id, 
-    int &num, 
+    cpuCycleTimer &timer, 
     Barrier *barrier)
 {
     ib_err_t err;
@@ -441,8 +442,7 @@ ib_err_t ycsb_run_txn(
     //int trx_num = 1000;
     while (done == 0)
     {
-        //trx_num--;
-        // printf("thread id: %d, txn id: %d\n", thread_id, trx_num);
+        timer.start();
         int query_num = rnd.randomInt() % 10 + 1;
         bool deadlock = false;
 
@@ -462,7 +462,6 @@ ib_err_t ycsb_run_txn(
             int op = rnd.randomInt() % 100;
             int pkey = rnd.randomInt() % init_table_size;
 
-            // printf("[%d-%d]\t", thread_id, trx_num);
             if (op < read_ratio)
             {
                 // read random row
@@ -472,8 +471,6 @@ ib_err_t ycsb_run_txn(
             }
             else
             {
-                // update random row
-                // printf("update \t%d\n", pkey);
                 err = update_tuple(crsr, pkey);
                 assert(err == DB_SUCCESS || err == DB_DEADLOCK || err == DB_LOCK_WAIT_TIMEOUT);
             }
@@ -495,7 +492,7 @@ ib_err_t ycsb_run_txn(
             err = ib_trx_commit(ib_trx);
             assert(err == DB_SUCCESS);
             // printf("committed\n\n");
-            num++;
+            timer.end();
         }
         else
         {

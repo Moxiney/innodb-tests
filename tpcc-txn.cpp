@@ -33,28 +33,15 @@ void tuple_delete(ib_tpl_t &tpl)
     ib_tuple_delete(tpl);
 }
 
-ib_err_t tpcc_run_txn(tpcc_db_t *db, int thd_id, int &num, Barrier *barrier)
+ib_err_t tpcc_run_txn(tpcc_db_t *db, int thd_id, cpuCycleTimer &timer, Barrier *barrier)
 {
     // To do:
     ib_err_t err;
-    // auto query = std::make_unique<tpcc_query>();
-    // query->init(thd_id);
-    // if (query->type == TPCC_PAYMENT)
-    // {
-    //     // printf("%d: payment\n", thd_id);
-    //     err = run_payment(db, query.get());
-    // }
-    // else
-    // {
-    //     // printf("%d: new order\n", thd_id);
-    //     err = run_new_order(db, query.get());
-    // }
-    // if (err == DB_SUCCESS)
-    //     num++;
 
     barrier->wait();
     while (done == 0)
     {
+        timer.start();
         auto query = std::make_unique<tpcc_query>();
         query->init(thd_id);
         if (query->type == TPCC_PAYMENT)
@@ -67,8 +54,9 @@ ib_err_t tpcc_run_txn(tpcc_db_t *db, int thd_id, int &num, Barrier *barrier)
             // printf("%d: new order\n", thd_id);
             err = run_new_order(db, query.get());
         }
-        if (err == DB_SUCCESS)
-            num++;
+        if (err == DB_SUCCESS) {
+            timer.end();
+        }
     }
 
     return err;

@@ -105,19 +105,20 @@ int main(int argc, char *argv[])
 
 	// multi_thread_query
 	std::thread threads[thread_num];
-	int num[thread_num];
+	// int num[thread_num];
+	cpuCycleTimer timers[thread_num];
 	auto barrier = std::make_unique<Barrier>(thread_num + 1);
 
 	tpcc_rdm.resize(10);
 
 	for (int i = 0; i < thread_num; i++)
 	{
-		num[i] = 0;
+		// num[i] = 0;
 		threads[i] = std::thread(
 			[&](int id) {
 				printf("thread %d start to run_txn\n", id);
 				//err = ycsb_run_txn(DATABASE, TABLE, read_ratio, id, num[id], barrier.get());
-				err = tpcc_run_txn(&tpcc_db, id, num[id], barrier.get());
+				err = tpcc_run_txn(&tpcc_db, id, timers[id], barrier.get());
 				// assert(err == DB_SUCCESS);
 			},
 			i);
@@ -130,10 +131,12 @@ int main(int argc, char *argv[])
 	printf("done, wait for join\n");
 
 	int res = 0;
+	long cycle_total = 0;
 	for (int i = 0; i < thread_num; i++)
 	{
 		threads[i].join();
-		res += num[i];
+		res += timers[i].get_count();
+		cycle_total += timers[i].get_total();
 	}
 
 	// printf("Drop table\n");
@@ -143,6 +146,7 @@ int main(int argc, char *argv[])
 	err = tpcc_db.shutdown();
 
 	printf("total res %d, tps %f\n", res, (double)res / duration);
+	printf("avg latency %f\n", (double)cycle_total / res);
 
 	return (EXIT_SUCCESS);
 }

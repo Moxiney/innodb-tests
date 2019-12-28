@@ -75,7 +75,7 @@ private:
     void init_permutation(ib_ulint_t *perm_c_id, ib_ulint_t wh_id);
 };
 
-ib_err_t tpcc_run_txn(tpcc_db_t *db, int thd_id, int &num, Barrier *barrier);
+ib_err_t tpcc_run_txn(tpcc_db_t *db, int thd_id, cpuCycleTimer &timer, Barrier *barrier);
 
 ib_err_t run_payment(tpcc_db_t *db, tpcc_query *query);
 

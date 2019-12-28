@@ -16,7 +16,7 @@ ib_err_t ycsb_run_txn(
     const char *name,
     int read_ratio,
     int thread_id,
-    int &num, 
+    cpuCycleTimer &timer,
     Barrier *barrier);
 
 ib_err_t ycsb_display(

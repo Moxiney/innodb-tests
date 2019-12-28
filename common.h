@@ -102,3 +102,43 @@ class Barrier{
             while(now_threads.load() != threads_num) {}
         }
     };
+
+
+static __always_inline uint64_t rdtsc() {
+    unsigned int lo, hi;
+    __asm__ __volatile__("rdtsc" : "=a"(lo), "=d"(hi));
+    return ((uint64_t)hi << 32) | lo;
+}
+
+#define CPU_FREQUENCY 2.2
+
+class cpuCycleTimer {
+  public:
+    long long t1, t2, total;
+    int count = 0;
+
+    cpuCycleTimer() { reset(); }
+    void start() { t1 = rdtsc(); }
+    void end() {
+        t2 = rdtsc();
+        total += t2 - t1;
+        count++;
+    }
+    void reset() { count = t1 = t2 = total = 0; }
+    double duration() { // ns
+        return total / CPU_FREQUENCY;
+    }
+
+    int get_count() {
+        return count;
+    };
+
+    long get_total() {
+        return total;
+    };
+
+    double cal_latency() {
+        return 1.0 * total / count / CPU_FREQUENCY;
+    }
+
+};
