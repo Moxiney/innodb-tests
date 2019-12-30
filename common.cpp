@@ -83,7 +83,7 @@ ib_err_t test_configure(int buff_size)
     err = ib_cfg_set_int("log_files_in_group", 4);
     assert(err == DB_SUCCESS);
 
-    err = ib_cfg_set_int("log_file_size", 32 * 1024 * 1024);
+    err = ib_cfg_set_int("log_file_size", 256 * 1024 * 1024);
     assert(err == DB_SUCCESS);
 
     err = ib_cfg_set_int("log_buffer_size", 24 * 16384);

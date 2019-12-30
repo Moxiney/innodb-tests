@@ -43,7 +43,7 @@ create_table(
     char table_name[IB_MAX_TABLE_NAME_LEN];
 
     snprintf(table_name, sizeof(table_name), "%s/%s", dbname, name);
-    printf("Creating %s\n", table_name);
+    // printf("Creating %s\n", table_name);
 
     /* Pass a table page size of 0, ie., use default page size. */
     err = ib_table_schema_create(

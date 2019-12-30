@@ -81,10 +81,10 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	printf("key number %d\n", init_table_size);
-	printf("thread number %d \n", thread_num);
-	printf("duration %d\n", duration);
-	printf("read ratio %d\n", read_ratio);
+	printf("key number %d\t", init_table_size);
+	printf("thread number %d \t", thread_num);
+	printf("duration %d\t", duration);
+	printf("read ratio %d\t", read_ratio);
 	printf("buff size %d\n", buff_size);
 
 	
@@ -117,7 +117,7 @@ int main(int argc, char *argv[])
 		// num[i] = 0;
 		threads[i] = std::thread(
 			[&](int id) {
-				printf("thread %d start to run_txn\n", id);
+				// printf("thread %d start to run_txn\n", id);
 				stick_this_thread_to_core(id);
 				err = ycsb_run_txn(DATABASE, TABLE, read_ratio, id, timers[id], barrier.get());
 				assert(err == DB_SUCCESS);
@@ -129,7 +129,7 @@ int main(int argc, char *argv[])
 	std::this_thread::sleep_for(std::chrono::seconds(duration));
 	done = 1;
 
-	printf("done, wait for join\n");
+	// printf("done, wait for join\n");
 
 	int res = 0;
 	long cycle_total = 0;
@@ -140,7 +140,7 @@ int main(int argc, char *argv[])
 		cycle_total += timers[i].get_total();
 	}
 
-	printf("Drop table\n");
+	// printf("Drop table\n");
 	err = drop_table(DATABASE, TABLE);
 	assert(err == DB_SUCCESS);
 

@@ -76,9 +76,9 @@ int main(int argc, char *argv[])
             break;
         }
     }
-	printf("warehouse number %d\n", num_wh);
-	printf("thread number %d \n", thread_num);
-	printf("duration %d\n", duration);
+	printf("warehouse number %d\t", num_wh);
+	printf("thread number %d \t", thread_num);
+	printf("duration %d\t", duration);
 	printf("buff size %d\n", buff_size);
 	
 
@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
 		// num[i] = 0;
 		threads[i] = std::thread(
 			[&](int id) {
-				printf("thread %d start to run_txn\n", id);
+				// printf("thread %d start to run_txn\n", id);
 				//err = ycsb_run_txn(DATABASE, TABLE, read_ratio, id, num[id], barrier.get());
 				stick_this_thread_to_core(id);
 				err = tpcc_run_txn(&tpcc_db, id, timers[id], barrier.get());
@@ -129,7 +129,7 @@ int main(int argc, char *argv[])
 	std::this_thread::sleep_for(std::chrono::seconds(duration));
 	done = 1;
 
-	printf("done, wait for join\n");
+	// printf("done, wait for join\n");
 
 	int res = 0;
 	long cycle_total = 0;

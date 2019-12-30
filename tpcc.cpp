@@ -124,7 +124,7 @@ ib_err_t tpcc_db_t::init_tables_data()
     {
         threads[wh_id-1] = std::thread(
             [&](ib_ulint_t wh_id) {
-                printf("thread %ld start to init data of wh %ld\n", wh_id, wh_id);
+                // printf("thread %ld start to init data of wh %ld\n", wh_id, wh_id);
                 init_wh_data(wh_id);
                 init_dist_data(wh_id);
                 init_stock_data(wh_id);
@@ -151,7 +151,7 @@ ib_err_t tpcc_db_t::init_tables_data()
     {
         threads[wh_id-1].join();
     }
-    printf("data initialized \n");
+    // printf("data initialized \n");
     // exit(0);
     return err;
 }

@@ -75,7 +75,7 @@ TABLE=ORDER
 	8,int64_t,O_C_ID
 	8,int64_t,O_D_ID
 	8,int64_t,O_W_ID
-	8,int64_t,O_ENTRY_D
+	8,intmake64_t,O_ENTRY_D
 	8,int64_t,O_CARRIER_ID
 	8,int64_t,O_OL_CNT
 	8,int64_t,O_ALL_LOCAL
