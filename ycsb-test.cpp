@@ -94,11 +94,11 @@ int main(int argc, char *argv[])
 	ib_trx_t ib_trx;
 	ib_u64_t version;
 
-	version = ib_api_version();
-	printf("API: %d.%d.%d\n",
-		   (int)(version >> 32),			/* Current version */
-		   (int)((version >> 16)) & 0xffff, /* Revisiion */
-		   (int)(version & 0xffff));		/* Age */
+	// version = ib_api_version();
+	// printf("API: %d.%d.%d\n",
+	// 	   (int)(version >> 32),			/* Current version */
+	// 	   (int)((version >> 16)) & 0xffff, /* Revisiion */
+	// 	   (int)(version & 0xffff));		/* Age */
 
 	err = database_init(DATABASE, buff_size);
 	assert(err == DB_SUCCESS);
@@ -149,7 +149,7 @@ int main(int argc, char *argv[])
 
 
 	printf("total res %d, tps %f\t", res, (double)res / duration);
-	printf("avg latency %f\n", (double)cycle_total / res);
+	printf("avg latency %f\n\n", (double)cycle_total / res);
 
 	return (EXIT_SUCCESS);
 }

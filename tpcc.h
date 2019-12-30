@@ -29,7 +29,7 @@ class TPCCConfig {
     const static int firstname_len = 16;
     const static int lastname_len = 16;
 
-    const static int g_perc_neworder = 45; // new_order所占比例
+    const static int g_perc_neworder = 50; // new_order所占比例
 };
 
 struct ib_col_t {

@@ -90,11 +90,11 @@ int main(int argc, char *argv[])
 	ib_trx_t ib_trx;
 	ib_u64_t version;
 
-	version = ib_api_version();
-	printf("API: %d.%d.%d\n",
-		   (int)(version >> 32),			/* Current version */
-		   (int)((version >> 16)) & 0xffff, /* Revisiion */
-		   (int)(version & 0xffff));		/* Age */
+	// version = ib_api_version();
+	// printf("API: %d.%d.%d\n",
+	// 	   (int)(version >> 32),			/* Current version */
+	// 	   (int)((version >> 16)) & 0xffff, /* Revisiion */
+	// 	   (int)(version & 0xffff));		/* Age */
 
 	tpcc_db_t tpcc_db = {
 		"TPCC",
@@ -144,7 +144,7 @@ int main(int argc, char *argv[])
 	err = tpcc_db.shutdown();
 
 	printf("total res %d, tps %f\t", res, (double)res / duration);
-	printf("avg latency %f\n", (double)cycle_total / res);
+	printf("avg latency %f\n\n", (double)cycle_total / res);
 
 	return (EXIT_SUCCESS);
 }

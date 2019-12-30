@@ -20,8 +20,8 @@ void tpcc_query::gen_payment(uint64_t thd_id) {
     type = TPCC_PAYMENT;
 
     // 首先随机warehouse的id
-    w_id = URand(1, num_wh, thd_id % num_wh);
-
+    // w_id = URand(1, num_wh, thd_id % num_wh);
+    w_id = thd_id % num_wh + 1;
     d_w_id = w_id;
 
     // 随机district的id
@@ -63,7 +63,8 @@ void tpcc_query::gen_new_order(uint64_t thd_id) {
     type = TPCC_NEW_ORDER;
 
     // 随机warehouse id
-    w_id = URand(1, num_wh, thd_id % num_wh);
+    //w_id = URand(1, num_wh, thd_id % num_wh);
+    w_id = thd_id % num_wh + 1;
 
     // 随机district id和customer id
     d_id = URand(1, TPCCConfig::g_dist_per_ware, w_id - 1);
