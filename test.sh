@@ -14,23 +14,25 @@ do
 done
 
 #data size per wh may be 80MB
-for buffsize in 10 100
+for buffsize in 10 150
 do
     for warehourse in 1 4
     do
         for num in 1 2 4 6 8 10 12 14 16 18
         do
             make clean-data
-            ./tpcc-test -n ${num} -d 10 -w ${warehourse} -b ${${buffsize}*${warehourse}}>> ./tpcc.res
+            ./tpcc-test -n ${num} -d 10 -w ${warehourse} -b $((${warehourse}*${buffsize}))>> ./tpcc.res
         done
     done
 done 
 
-for buffsize in 10 100
+for buffsize in 10 150
 do
     for num in 1 2 4 8 10 12 14 16 18
     do
         make clean-data
-        ../build/bin/tpcc_bench -n ${num} -d 10 -w ${num} >> ./tpcc.res
+        ./tpcc-test -n ${num} -d 10 -w ${num} -b $((${num}*${buffsize}))>> ./tpcc.res
     done
 done
+
+
