@@ -8,6 +8,32 @@
 #include <sys/types.h>
 #include <errno.h>
 #include <getopt.h>
+#include <unistd.h>
+#include <sched.h>
+#include <pthread.h> 
+
+const int thread_to_core[36] = {
+        0,  4,  8,  12, 16, 20, 24, 28, 32,
+        36, 40, 44, 48, 52, 56, 60, 64, 68, // numa node 0
+        1,  5,  9,  13, 17, 21, 25, 29, 33,
+        37, 41, 45, 49, 53, 57, 61, 65, 69 // numa node 1
+};
+
+int stick_this_thread_to_core(int core_id) {
+    int num_cores = sysconf(_SC_NPROCESSORS_ONLN);
+    if (core_id < 0 || core_id >= num_cores)
+        return EINVAL;
+
+    cpu_set_t cpuset;
+    CPU_ZERO(&cpuset);
+    CPU_SET(thread_to_core[core_id], &cpuset);
+
+    pthread_t current_thread = pthread_self();
+    return pthread_setaffinity_np(current_thread, sizeof(cpu_set_t),
+                                  &cpuset);
+}
+
+
 
 static const char log_group_home_dir[] = "/mnt/pmem0/caishiyu/ibd/log";
 static const char data_file_path[] = "ibdata1:256M:autoextend";

@@ -118,6 +118,7 @@ int main(int argc, char *argv[])
 		threads[i] = std::thread(
 			[&](int id) {
 				printf("thread %d start to run_txn\n", id);
+				stick_this_thread_to_core(id);
 				err = ycsb_run_txn(DATABASE, TABLE, read_ratio, id, timers[id], barrier.get());
 				assert(err == DB_SUCCESS);
 			},
@@ -147,7 +148,7 @@ int main(int argc, char *argv[])
 	assert(err == DB_SUCCESS);
 
 
-	printf("total res %d, tps %f\n", res, (double)res / duration);
+	printf("total res %d, tps %f\t", res, (double)res / duration);
 	printf("avg latency %f\n", (double)cycle_total / res);
 
 	return (EXIT_SUCCESS);

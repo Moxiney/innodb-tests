@@ -118,6 +118,7 @@ int main(int argc, char *argv[])
 			[&](int id) {
 				printf("thread %d start to run_txn\n", id);
 				//err = ycsb_run_txn(DATABASE, TABLE, read_ratio, id, num[id], barrier.get());
+				stick_this_thread_to_core(id);
 				err = tpcc_run_txn(&tpcc_db, id, timers[id], barrier.get());
 				// assert(err == DB_SUCCESS);
 			},
@@ -138,14 +139,11 @@ int main(int argc, char *argv[])
 		res += timers[i].get_count();
 		cycle_total += timers[i].get_total();
 	}
-
-	// printf("Drop table\n");
-	// err = drop_table(DATABASE, TABLE);
-	// assert(err == DB_SUCCESS);
+	
 
 	err = tpcc_db.shutdown();
 
-	printf("total res %d, tps %f\n", res, (double)res / duration);
+	printf("total res %d, tps %f\t", res, (double)res / duration);
 	printf("avg latency %f\n", (double)cycle_total / res);
 
 	return (EXIT_SUCCESS);

@@ -443,7 +443,8 @@ ib_err_t ycsb_run_txn(
     while (done == 0)
     {
         timer.start();
-        int query_num = rnd.randomInt() % 10 + 1;
+        //int query_num = rnd.randomInt() % 10 + 1;
+        int query_num = 10;
         bool deadlock = false;
 
         ib_trx = ib_trx_begin(IB_TRX_REPEATABLE_READ);

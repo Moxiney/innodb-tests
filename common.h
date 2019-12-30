@@ -5,6 +5,8 @@
 #include <cstring>
 #include <atomic>
 
+int stick_this_thread_to_core(int core_id);
+
 static void
 create_directory(
     /*=============*/
