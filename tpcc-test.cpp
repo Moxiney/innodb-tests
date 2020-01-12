@@ -109,7 +109,8 @@ int main(int argc, char *argv[])
 	cpuCycleTimer timers[thread_num];
 	auto barrier = std::make_unique<Barrier>(thread_num + 1);
 
-	tpcc_rdm.resize(10);
+	auto rnd_size = thread_num > num_wh? thread_num: num_wh;
+	tpcc_rdm.resize(rnd_size);
 
 	for (int i = 0; i < thread_num; i++)
 	{

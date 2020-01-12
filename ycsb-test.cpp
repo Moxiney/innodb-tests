@@ -141,8 +141,8 @@ int main(int argc, char *argv[])
 	}
 
 	// printf("Drop table\n");
-	err = drop_table(DATABASE, TABLE);
-	assert(err == DB_SUCCESS);
+	// err = drop_table(DATABASE, TABLE);
+	// assert(err == DB_SUCCESS);
 
 	err = ib_shutdown(IB_SHUTDOWN_NORMAL);
 	assert(err == DB_SUCCESS);
