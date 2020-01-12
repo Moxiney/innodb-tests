@@ -133,6 +133,7 @@ ib_err_t tpcc_db_t::init_tables_data()
                     init_cust_data(wh_id, dist_id);
                     init_order_data(wh_id, dist_id);
                     init_hist_data(wh_id, dist_id);
+<<<<<<< HEAD
 
             //         for (uint64_t cust_id = 1; cust_id <= TPCCConfig::g_cust_per_dist; cust_id++)
             //         {
@@ -141,6 +142,14 @@ ib_err_t tpcc_db_t::init_tables_data()
 			// // printf("%ld-%ld-%ld\n", wh_id, dist_id, cust_id);
             //         }
                     // printf("thread %ld start to init data of wh %ld, dist %ld\n", wh_id, wh_id, dist_id);
+=======
+                    // for (uint64_t cust_id = 1; cust_id <= TPCCConfig::g_cust_per_dist; cust_id++)
+                    // {
+                    //     //wl->init_tab_hist(cid, did, wid);
+                        
+                    // }
+                    printf("thread %ld start to init data of wh %ld, dist %ld\n", wh_id, wh_id, dist_id);
+>>>>>>> 90fd81a9f5512bfc5e949bd15c36d0033718f160
                 }
                 
                 
