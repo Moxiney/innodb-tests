@@ -70,7 +70,7 @@ create_directory(
     }
 }
 
-ib_err_t test_configure(int buff_size)
+ib_err_t test_configure(long buff_size)
 /*================*/
 {
     ib_err_t err;
@@ -95,7 +95,7 @@ ib_err_t test_configure(int buff_size)
     err = ib_cfg_set_int("additional_mem_pool_size", 4 * 1024 * 1024);
     assert(err == DB_SUCCESS);
 
-    err = ib_cfg_set_int("flush_log_at_trx_commit", 1);
+    err = ib_cfg_set_int("flush_log_at_trx_commit", 0);
     assert(err == DB_SUCCESS);
 
     err = ib_cfg_set_int("file_io_threads", 4);

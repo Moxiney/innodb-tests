@@ -12,7 +12,7 @@ create_directory(
     /*=============*/
     const char *path);
 
-ib_err_t test_configure(int buff_size);
+ib_err_t test_configure(long buff_size);
 
 ib_err_t
 create_database(
