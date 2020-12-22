@@ -116,8 +116,11 @@ int main(int argc, char *argv[]) {
   assert(err == DB_SUCCESS);
 
   auto end = std::chrono::system_clock::now();
-  std::chrono::duration<double> elapsed = end - start;
-  std::cout << "total reboot time " << elapsed.count() << std::endl;
+
+  if (only_recover) {
+    std::chrono::duration<double> elapsed = end - start;
+    std::cout << "total reboot time " << elapsed.count() << std::endl;
+  }
 
   err = ycsb_init(DATABASE, TABLE);
   assert(err == DB_SUCCESS);
@@ -149,6 +152,17 @@ int main(int argc, char *argv[]) {
 
   int res = 0;
   long cycle_total = 0;
+
+  /* Crash */
+  if (only_recover) {
+    res += timers[i].get_count();
+    cycle_total += timers[i].get_total();
+    printf("total res %d, tps %f\t", res, (double)res / duration);
+    printf("avg latency %f\n\n", (double)cycle_total / res);
+    printf("System crashed.\n");
+    return 1;
+  }
+
   for (int i = 0; i < thread_num; i++) {
     threads[i].join();
     res += timers[i].get_count();
