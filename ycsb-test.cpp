@@ -155,8 +155,10 @@ int main(int argc, char *argv[]) {
 
   /* Crash */
   if (only_recover) {
-    res += timers[i].get_count();
-    cycle_total += timers[i].get_total();
+    for (int i = 0; i < thread_num; i++) {
+      res += timers[i].get_count();
+      cycle_total += timers[i].get_total();
+    }
     printf("total res %d, tps %f\t", res, (double)res / duration);
     printf("avg latency %f\n\n", (double)cycle_total / res);
     printf("System crashed.\n");
